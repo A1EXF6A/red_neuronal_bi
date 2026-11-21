@@ -74,3 +74,5 @@ modelos/*.keras
 modelos/artefactos/*.joblib
 modelos/pesos/*/*
 !modelos/pesos/*/.gitkeep
+
+generacion_datos/*
