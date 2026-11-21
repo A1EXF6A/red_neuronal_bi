@@ -1,0 +1,527 @@
+{
+  "ciudades": {
+    "Bangalore": {
+      "pais": "India",
+      "codigo_pais": "IN"
+    },
+    "Birmingham": {
+      "pais": "United Kingdom",
+      "codigo_pais": "GB"
+    },
+    "Brasilia": {
+      "pais": "Brazil",
+      "codigo_pais": "BR"
+    },
+    "Chennai": {
+      "pais": "India",
+      "codigo_pais": "IN"
+    },
+    "Chicago": {
+      "pais": "United States",
+      "codigo_pais": "US"
+    },
+    "Delhi": {
+      "pais": "India",
+      "codigo_pais": "IN"
+    },
+    "Fortaleza": {
+      "pais": "Brazil",
+      "codigo_pais": "BR"
+    },
+    "Houston": {
+      "pais": "United States",
+      "codigo_pais": "US"
+    },
+    "Hyderabad": {
+      "pais": "India",
+      "codigo_pais": "IN"
+    },
+    "Kyoto": {
+      "pais": "Japan",
+      "codigo_pais": "JP"
+    },
+    "Leeds": {
+      "pais": "United Kingdom",
+      "codigo_pais": "GB"
+    },
+    "Liverpool": {
+      "pais": "United Kingdom",
+      "codigo_pais": "GB"
+    },
+    "London": {
+      "pais": "United Kingdom",
+      "codigo_pais": "GB"
+    },
+    "Los Angeles": {
+      "pais": "United States",
+      "codigo_pais": "US"
+    },
+    "Manchester": {
+      "pais": "United Kingdom",
+      "codigo_pais": "GB"
+    },
+    "Miami": {
+      "pais": "United States",
+      "codigo_pais": "US"
+    },
+    "Mumbai": {
+      "pais": "India",
+      "codigo_pais": "IN"
+    },
+    "Nagoya": {
+      "pais": "Japan",
+      "codigo_pais": "JP"
+    },
+    "New York": {
+      "pais": "United States",
+      "codigo_pais": "US"
+    },
+    "Osaka": {
+      "pais": "Japan",
+      "codigo_pais": "JP"
+    },
+    "Rio de Janeiro": {
+      "pais": "Brazil",
+      "codigo_pais": "BR"
+    },
+    "Salvador": {
+      "pais": "Brazil",
+      "codigo_pais": "BR"
+    },
+    "Sao Paulo": {
+      "pais": "Brazil",
+      "codigo_pais": "BR"
+    },
+    "Tokyo": {
+      "pais": "Japan",
+      "codigo_pais": "JP"
+    },
+    "Yokohama": {
+      "pais": "Japan",
+      "codigo_pais": "JP"
+    }
+  },
+  "fecha_base_precios": "2024-08-26",
+  "constantes_precios": {
+    "lag_pct_sin_historial": 9.19430254201874,
+    "dias_desde_anterior_sin_historial": 365.0
+  },
+  "clases": {
+    "pedidos": {
+      "0": {
+        "nombre": "Entrega rápida",
+        "detalle": "hasta 42 min"
+      },
+      "1": {
+        "nombre": "Entrega normal",
+        "detalle": "43 a 51 min"
+      },
+      "2": {
+        "nombre": "Entrega lenta",
+        "detalle": "52 a 60 min"
+      },
+      "3": {
+        "nombre": "Entrega muy lenta",
+        "detalle": "más de 60 min"
+      }
+    },
+    "resenas": {
+      "0": {
+        "nombre": "Satisfacción baja",
+        "detalle": "calificación hasta 3.2"
+      },
+      "1": {
+        "nombre": "Satisfacción media-baja",
+        "detalle": "calificación de 3.2 a 3.7"
+      },
+      "2": {
+        "nombre": "Satisfacción media-alta",
+        "detalle": "calificación de 3.7 a 4.2"
+      },
+      "3": {
+        "nombre": "Satisfacción alta",
+        "detalle": "calificación mayor a 4.2"
+      }
+    },
+    "precios": {
+      "0": {
+        "nombre": "Cambio moderado",
+        "detalle": "el precio sube 9.1 % o menos"
+      },
+      "1": {
+        "nombre": "Cambio fuerte",
+        "detalle": "el precio sube más de 9.1 %"
+      }
+    }
+  },
+  "rangos": {
+    "pedidos": {
+      "dia": [
+        1.0,
+        31.0
+      ],
+      "es_fin_de_semana": [
+        0.0,
+        1.0
+      ],
+      "semana_anio": [
+        1.0,
+        53.0
+      ],
+      "mes": [
+        1.0,
+        12.0
+      ],
+      "trimestre": [
+        1.0,
+        4.0
+      ],
+      "anio": [
+        2024.0,
+        2026.0
+      ],
+      "cliente_activo": [
+        0.0,
+        1.0
+      ],
+      "costo_promedio_dos_personas": [
+        23.0,
+        163.0
+      ],
+      "tiene_delivery": [
+        0.0,
+        1.0
+      ],
+      "tiene_comer_en_local": [
+        0.0,
+        1.0
+      ],
+      "tiene_wifi": [
+        0.0,
+        1.0
+      ],
+      "acepta_tarjeta": [
+        0.0,
+        1.0
+      ],
+      "restaurante_activo": [
+        0.0,
+        1.0
+      ],
+      "monto_total": [
+        9.89,
+        254.38
+      ],
+      "tarifa_entrega": [
+        2.5,
+        17.68
+      ],
+      "distancia_km": [
+        1.0,
+        20.9
+      ],
+      "multiplicador_hora_pico": [
+        1.0,
+        1.5
+      ],
+      "tarifa_por_km": [
+        0.5956937799043063,
+        2.75
+      ],
+      "monto_por_km": [
+        0.5617021276595745,
+        224.84
+      ],
+      "log_distancia": [
+        0.6931471805599453,
+        3.086486636822455
+      ],
+      "es_hora_pico": [
+        0.0,
+        1.0
+      ],
+      "dist_x_pico": [
+        1.0,
+        31.35
+      ],
+      "cliente_misma_ciudad": [
+        0.0,
+        1.0
+      ],
+      "cliente_mismo_pais": [
+        0.0,
+        1.0
+      ],
+      "mes_sin": [
+        -1.0,
+        1.0
+      ],
+      "mes_cos": [
+        -1.0,
+        1.0
+      ],
+      "antiguedad_cliente_dias": [
+        0.0,
+        1014.0
+      ],
+      "hist_tiempo_restaurante": [
+        41.59290654180458,
+        63.0268148486018
+      ],
+      "hist_n_pedidos_restaurante": [
+        0.0,
+        23.0
+      ],
+      "hist_tiempo_ciudad": [
+        45.85958904109589,
+        57.2121212121212
+      ],
+      "fecha_anio": [
+        2024.0,
+        2026.0
+      ],
+      "fecha_mes": [
+        1.0,
+        12.0
+      ],
+      "fecha_dia": [
+        1.0,
+        31.0
+      ],
+      "fecha_dia_semana": [
+        0.0,
+        6.0
+      ],
+      "fecha_fin_semana": [
+        0.0,
+        1.0
+      ],
+      "dia_semana_sin": [
+        -0.9749279121818236,
+        0.9749279121818236
+      ],
+      "dia_semana_cos": [
+        -0.9009688679024191,
+        1.0
+      ]
+    },
+    "resenas": {
+      "dia": [
+        1.0,
+        31.0
+      ],
+      "es_fin_de_semana": [
+        0.0,
+        1.0
+      ],
+      "semana_anio": [
+        1.0,
+        53.0
+      ],
+      "mes": [
+        1.0,
+        12.0
+      ],
+      "trimestre": [
+        1.0,
+        4.0
+      ],
+      "anio": [
+        2024.0,
+        2026.0
+      ],
+      "tiempo_entrega_minutos": [
+        20.0,
+        84.0
+      ],
+      "distancia_km": [
+        1.0,
+        20.9
+      ],
+      "multiplicador_hora_pico": [
+        1.0,
+        1.5
+      ],
+      "tarifa_entrega": [
+        2.5,
+        17.68
+      ],
+      "monto_total": [
+        10.56,
+        254.38
+      ],
+      "nivel_demora_pedido": [
+        0.0,
+        3.0
+      ],
+      "hist_tiempo_restaurante": [
+        42.25989007038893,
+        63.0268148486018
+      ],
+      "mes_sin": [
+        -1.0,
+        1.0
+      ],
+      "mes_cos": [
+        -1.0,
+        1.0
+      ],
+      "tarifa_por_km": [
+        0.5956937799043063,
+        2.75
+      ],
+      "tiempo_vs_esperado_restaurante": [
+        -32.164926289926285,
+        32.15425740188549
+      ],
+      "es_hora_pico": [
+        0.0,
+        1.0
+      ],
+      "fecha_anio": [
+        2024.0,
+        2026.0
+      ],
+      "fecha_mes": [
+        1.0,
+        12.0
+      ],
+      "fecha_dia": [
+        1.0,
+        31.0
+      ],
+      "fecha_dia_semana": [
+        0.0,
+        6.0
+      ],
+      "fecha_fin_semana": [
+        0.0,
+        1.0
+      ],
+      "dia_semana_sin": [
+        -0.9749279121818236,
+        0.9749279121818236
+      ],
+      "dia_semana_cos": [
+        -0.9009688679024191,
+        1.0
+      ]
+    },
+    "precios": {
+      "mes": [
+        1.0,
+        12.0
+      ],
+      "trimestre": [
+        1.0,
+        4.0
+      ],
+      "anio": [
+        2024.0,
+        2026.0
+      ],
+      "disponible_item": [
+        0.0,
+        1.0
+      ],
+      "precio_anterior": [
+        4.25,
+        75.44
+      ],
+      "n_cambio": [
+        0.0,
+        1.0
+      ],
+      "dias_desde_inicio": [
+        0.0,
+        509.0
+      ],
+      "dias_desde_anterior": [
+        4.0,
+        508.0
+      ],
+      "lag_pct": [
+        -2.0,
+        21.43097386884456
+      ],
+      "tiene_historial": [
+        0.0,
+        1.0
+      ],
+      "log_precio_anterior": [
+        1.4469189829363254,
+        4.323337638325202
+      ],
+      "mes_sin": [
+        -1.0,
+        1.0
+      ],
+      "mes_cos": [
+        -1.0,
+        1.0
+      ],
+      "hist_pct_ciudad": [
+        2.98,
+        12.4810596674033
+      ],
+      "hist_pct_categoria": [
+        2.98,
+        10.228917817947856
+      ],
+      "hist_eventos_previos": [
+        0.0,
+        1.0
+      ],
+      "hist_pct_ultimo": [
+        -2.01,
+        21.46
+      ],
+      "hist_pct_media_previa": [
+        -2.01,
+        21.46
+      ],
+      "fecha_anio": [
+        2024.0,
+        2026.0
+      ],
+      "fecha_mes": [
+        1.0,
+        12.0
+      ],
+      "fecha_dia": [
+        1.0,
+        31.0
+      ],
+      "fecha_dia_semana": [
+        0.0,
+        6.0
+      ],
+      "fecha_fin_semana": [
+        0.0,
+        1.0
+      ],
+      "dia_semana_sin": [
+        -0.9749279121818236,
+        0.9749279121818236
+      ],
+      "dia_semana_cos": [
+        -0.9009688679024191,
+        1.0
+      ]
+    }
+  },
+  "rango_fechas": {
+    "pedidos": [
+      "2024-08-26",
+      "2026-08-25"
+    ],
+    "resenas": [
+      "2024-08-27",
+      "2026-08-30"
+    ],
+    "precios": [
+      "2024-08-26",
+      "2026-08-25"
+    ]
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "tarea": "precios",
+  "nombre_corto": "Precios",
+  "titulo": "Cambio de precio",
+  "descripcion": "Anticipa si el próximo cambio de precio de un ítem del menú será fuerte (más de 9.1 %).",
+  "momento_prediccion": "Antes de aplicar el nuevo precio.",
+  "secciones": [
+    {
+      "id": "cambio",
+      "titulo": "El cambio",
+      "campos": [
+        {
+          "nombre": "fecha",
+          "etiqueta": "Fecha del cambio",
+          "tipo": "fecha",
+          "requerido": true,
+          "ejemplo": "2025-06-12"
+        },
+        {
+          "nombre": "precio_anterior",
+          "etiqueta": "Precio actual (antes del cambio)",
+          "tipo": "numero",
+          "requerido": true,
+          "ejemplo": 31.4,
+          "min": 0.01,
+          "max": 100000,
+          "paso": 0.01
+        }
+      ]
+    },
+    {
+      "id": "item",
+      "titulo": "El ítem del menú",
+      "campos": [
+        {
+          "nombre": "categoria_item",
+          "etiqueta": "Categoría",
+          "tipo": "texto",
+          "requerido": true,
+          "ejemplo": "Main Course"
+        },
+        {
+          "nombre": "cocina_item",
+          "etiqueta": "Cocina del ítem",
+          "tipo": "texto",
+          "requerido": true,
+          "ejemplo": "Italian"
+        },
+        {
+          "nombre": "disponible_item",
+          "etiqueta": "Ítem disponible",
+          "tipo": "booleano",
+          "requerido": true,
+          "ejemplo": true,
+          "defecto": true
+        }
+      ]
+    },
+    {
+      "id": "restaurante",
+      "titulo": "El restaurante",
+      "campos": [
+        {
+          "nombre": "cocina_restaurante",
+          "etiqueta": "Tipo de cocina",
+          "tipo": "texto",
+          "requerido": true,
+          "ejemplo": "Italian"
+        },
+        {
+          "nombre": "ciudad_restaurante",
+          "etiqueta": "Ciudad",
+          "tipo": "texto",
+          "requerido": true,
+          "ejemplo": "Chicago",
+          "ayuda": "Elige una de la lista o escribe otra."
+        },
+        {
+          "nombre": "pais_restaurante",
+          "etiqueta": "País del restaurante",
+          "tipo": "texto",
+          "requerido": false,
+          "ayuda": "Opcional. Indícalo solo si la ciudad no está en la lista."
+        }
+      ]
+    },
+    {
+      "id": "historial",
+      "titulo": "Historial del ítem",
+      "descripcion": "Indica si el ítem ya tuvo un cambio de precio anterior.",
+      "campos": [
+        {
+          "nombre": "tiene_historial",
+          "etiqueta": "Ya tuvo un cambio anterior",
+          "tipo": "booleano",
+          "requerido": true,
+          "ejemplo": false,
+          "defecto": false,
+          "ayuda": "Actívalo si este es el segundo cambio del ítem."
+        },
+        {
+          "nombre": "pct_cambio_anterior",
+          "etiqueta": "Porcentaje del cambio anterior",
+          "tipo": "numero",
+          "requerido": true,
+          "ejemplo": 12.5,
+          "min": -100,
+          "max": 1000,
+          "paso": 0.01,
+          "unidad": "%",
+          "ayuda": "Cuánto subió (o bajó) el precio en el cambio previo.",
+          "rango_ref": "lag_pct",
+          "mostrar_si": {
+            "campo": "tiene_historial",
+            "valor": true
+          }
+        },
+        {
+          "nombre": "dias_desde_anterior",
+          "etiqueta": "Días desde el cambio anterior",
+          "tipo": "entero",
+          "requerido": true,
+          "ejemplo": 210,
+          "min": 0,
+          "max": 5000,
+          "paso": 1,
+          "unidad": "días",
+          "mostrar_si": {
+            "campo": "tiene_historial",
+            "valor": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "mercado",
+      "titulo": "Contexto de mercado",
+      "descripcion": "Variación reciente de precios en el mercado. Opcional: si no la conoces, déjala vacía.",
+      "campos": [
+        {
+          "nombre": "hist_pct_ciudad",
+          "etiqueta": "Cambio medio reciente en la ciudad",
+          "tipo": "numero",
+          "requerido": false,
+          "ejemplo": 9.4,
+          "min": -100,
+          "max": 1000,
+          "paso": 0.01,
+          "unidad": "%"
+        },
+        {
+          "nombre": "hist_pct_categoria",
+          "etiqueta": "Cambio medio reciente en la categoría",
+          "tipo": "numero",
+          "requerido": false,
+          "ejemplo": 9.1,
+          "min": -100,
+          "max": 1000,
+          "paso": 0.01,
+          "unidad": "%"
+        }
+      ]
+    }
+  ]
+}

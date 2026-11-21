@@ -1,0 +1,150 @@
+{
+  "tarea": "resenas",
+  "nombre_corto": "Reseñas",
+  "titulo": "Satisfacción del cliente",
+  "descripcion": "Estima el nivel de calificación que dejará el cliente, una vez entregado el pedido y antes de que reseñe.",
+  "momento_prediccion": "Después de la entrega y antes de recibir calificación/comentario.",
+  "secciones": [
+    {
+      "id": "entrega",
+      "titulo": "La entrega",
+      "campos": [
+        {
+          "nombre": "fecha",
+          "etiqueta": "Fecha del pedido",
+          "tipo": "fecha",
+          "requerido": true,
+          "ejemplo": "2025-08-04"
+        },
+        {
+          "nombre": "tiempo_entrega_minutos",
+          "etiqueta": "Tiempo de entrega real",
+          "tipo": "entero",
+          "requerido": true,
+          "ejemplo": 59,
+          "min": 1,
+          "max": 600,
+          "paso": 1,
+          "unidad": "min",
+          "ayuda": "El nivel de demora se calcula a partir de este tiempo."
+        },
+        {
+          "nombre": "distancia_km",
+          "etiqueta": "Distancia",
+          "tipo": "numero",
+          "requerido": true,
+          "ejemplo": 12.8,
+          "min": 0.1,
+          "max": 500,
+          "paso": 0.1,
+          "unidad": "km"
+        },
+        {
+          "nombre": "multiplicador_hora_pico",
+          "etiqueta": "Multiplicador de hora pico",
+          "tipo": "numero",
+          "requerido": true,
+          "ejemplo": 1.5,
+          "min": 0.5,
+          "max": 5,
+          "paso": 0.05,
+          "ayuda": "Usa 1.0 en horario normal; 1.25 o 1.5 en hora pico."
+        },
+        {
+          "nombre": "tarifa_entrega",
+          "etiqueta": "Tarifa de entrega",
+          "tipo": "numero",
+          "requerido": true,
+          "ejemplo": 14.4,
+          "min": 0,
+          "max": 1000,
+          "paso": 0.01
+        },
+        {
+          "nombre": "monto_total",
+          "etiqueta": "Monto total",
+          "tipo": "numero",
+          "requerido": true,
+          "ejemplo": 208.24,
+          "min": 0.01,
+          "max": 100000,
+          "paso": 0.01
+        }
+      ]
+    },
+    {
+      "id": "cliente",
+      "titulo": "El cliente",
+      "campos": [
+        {
+          "nombre": "ciudad_cliente",
+          "etiqueta": "Ciudad del cliente",
+          "tipo": "texto",
+          "requerido": true,
+          "ejemplo": "Chennai",
+          "ayuda": "Elige una de la lista o escribe otra."
+        },
+        {
+          "nombre": "pais_cliente",
+          "etiqueta": "País del cliente",
+          "tipo": "texto",
+          "requerido": false,
+          "ayuda": "Opcional. Indícalo solo si la ciudad no está en la lista."
+        },
+        {
+          "nombre": "segmento_cliente",
+          "etiqueta": "Segmento",
+          "tipo": "texto",
+          "requerido": true,
+          "ejemplo": "VIP"
+        }
+      ]
+    },
+    {
+      "id": "restaurante",
+      "titulo": "El restaurante",
+      "campos": [
+        {
+          "nombre": "ciudad_restaurante",
+          "etiqueta": "Ciudad del restaurante",
+          "tipo": "texto",
+          "requerido": true,
+          "ejemplo": "Chennai",
+          "ayuda": "Elige una de la lista o escribe otra."
+        },
+        {
+          "nombre": "pais_restaurante",
+          "etiqueta": "País del restaurante",
+          "tipo": "texto",
+          "requerido": false,
+          "ayuda": "Opcional. Indícalo solo si la ciudad no está en la lista."
+        },
+        {
+          "nombre": "cocina_restaurante",
+          "etiqueta": "Tipo de cocina",
+          "tipo": "texto",
+          "requerido": true,
+          "ejemplo": "Brazilian"
+        }
+      ]
+    },
+    {
+      "id": "historial",
+      "titulo": "Historial",
+      "descripcion": "Dato de pedidos anteriores del restaurante. Opcional: si no lo tienes, déjalo vacío.",
+      "campos": [
+        {
+          "nombre": "hist_tiempo_restaurante",
+          "etiqueta": "Tiempo promedio del restaurante",
+          "tipo": "numero",
+          "requerido": false,
+          "ejemplo": 54.4,
+          "min": 0,
+          "max": 1000,
+          "paso": 0.1,
+          "unidad": "min"
+        }
+      ]
+    }
+  ]
+}
