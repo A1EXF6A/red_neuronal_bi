@@ -10,8 +10,7 @@ interface Props {
 
 /**
  * Un campo del formulario. Solo hay entradas de texto, número y fecha, e interruptores Sí/No.
- * En los campos de texto, `valores_validos` son solo sugerencias (datalist): se puede escribir
- * cualquier valor.
+ * Los campos de texto solo aceptan letras; los numéricos solo aceptan dígitos.
  */
 export default function Campo({ campo, valor, error, onCambio }: Props) {
   const id = useId();
@@ -63,10 +62,27 @@ export default function Campo({ campo, valor, error, onCambio }: Props) {
   const esFecha = campo.tipo === "fecha";
   const modo =
     campo.tipo === "entero" ? "numeric" : campo.tipo === "numero" ? "decimal" : undefined;
+  const esTexto = campo.tipo === "texto";
+  const esNumerico = campo.tipo === "entero" || campo.tipo === "numero";
   const marcador =
     !esFecha && campo.ejemplo !== undefined ? `Ej.: ${String(campo.ejemplo)}` : undefined;
-  const sugerencias = campo.tipo === "texto" ? campo.valores_validos ?? [] : [];
-  const idLista = `${id}-sugerencias`;
+
+  const filtrarTexto = (valorEntrada: string): string =>
+    valorEntrada.replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑüÜ\s]/g, "");
+
+  const filtrarNumero = (valorEntrada: string): string =>
+    valorEntrada.replace(/[^0-9.,-]/g, "");
+
+  const filtrar = (valorEntrada: string): string => {
+    if (esTexto) return filtrarTexto(valorEntrada);
+    if (esNumerico) return filtrarNumero(valorEntrada);
+    return valorEntrada;
+  };
+
+  const manejarCambio = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const limpio = filtrar(e.target.value);
+    onCambio(campo.nombre, limpio);
+  };
 
   return (
     <div className={`campo${error ? " con-error" : ""}`} data-campo={campo.nombre}>
@@ -80,22 +96,15 @@ export default function Campo({ campo, valor, error, onCambio }: Props) {
           name={campo.nombre}
           type={esFecha ? "date" : "text"}
           inputMode={modo}
-          list={sugerencias.length > 0 ? idLista : undefined}
+          pattern={esTexto ? "[a-zA-ZáéíóúñÁÉÍÓÚÑüÜ\\s]*" : esNumerico ? "[0-9.,-]*" : undefined}
           placeholder={marcador}
           value={String(valor)}
           autoComplete="off"
           spellCheck={false}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedby}
-          onChange={(e) => onCambio(campo.nombre, e.target.value)}
+          onChange={manejarCambio}
         />
-        {sugerencias.length > 0 && (
-          <datalist id={idLista}>
-            {sugerencias.map((v) => (
-              <option key={v} value={v} />
-            ))}
-          </datalist>
-        )}
         {campo.unidad && <span className="unidad">{campo.unidad}</span>}
       </div>
       {ayuda}

@@ -11,8 +11,8 @@
   --realce: #ffd23f;
   --error: #b3261e;
   --error-fondo: #fdecea;
-  --aviso: #7a4a00;
-  --aviso-fondo: #fff4d6;
+  --aviso: #010101;
+  --aviso-fondo: #60ee6fe3;
   --info-fondo: #dde7f3;
   --fuente-titulo: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --fuente-texto: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -586,7 +586,7 @@ input {
   margin-top: 8px;
   padding: 8px 12px;
   background: var(--aviso-fondo);
-  border-left: 4px solid #d99a1b;
+  border-left: 4px solid #2bd91b;
   border-radius: 0 6px 6px 0;
   font-size: 0.875rem;
   color: var(--aviso);

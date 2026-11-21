@@ -60,7 +60,7 @@ export default function App() {
   return (
     <div className="aplicacion">
       <header className="encabezado">
-        <h1>GlobalBite</h1>
+        <h1>GlobalBite Delivery</h1>
         <p className="encabezado-texto">
           Completa los datos de tu caso y obtén una predicción al instante. Elige arriba qué quieres
           estimar: la demora de un pedido, la satisfacción del cliente o un cambio de precio.

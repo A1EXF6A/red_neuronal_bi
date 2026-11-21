@@ -65,7 +65,7 @@ export default function ResultadoPrediccion({ esquema, resultado, cargando }: Pr
             <div className="avisos">
               <h3 className="ticket-subtitulo">A tener en cuenta</h3>
               <ul>
-                <li>Algo se predijo con datos nuevos.</li>
+                <li>Se predijo con datos nuevos.</li>
               </ul>
             </div>
 
