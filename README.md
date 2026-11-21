@@ -55,7 +55,6 @@ proyecto/
 │   ├── pedidos/
 │   ├── resenas/
 │   └── precios/
-├── generacion_datos/        (script que genera los CSV reforzados, ver abajo)
 ├── configuracion.py
 ├── ejecutar_todo.py
 └── requirements.txt
@@ -65,7 +64,6 @@ proyecto/
 
 El proyecto ahora lee `*_reforzado_etiquetado.csv` (carpeta `datos/originales/`) en lugar de los CSV antiguos.
 Estos archivos traen clases balanceadas, variables derivadas nuevas y la etiqueta como última columna.
-Cómo se generaron y por qué: `generacion_datos/README_generacion_datos.md`.
 
 Cambios de código:
 - `configuracion.py`: nuevos nombres de archivo y `COLUMNAS_PROHIBIDAS` (lista por tarea de columnas con fuga que nunca entran al modelo).
@@ -86,6 +84,126 @@ Columnas excluidas a propósito: `tiempo_entrega_minutos`, `calificacion_operati
 `precio_nuevo`, `monto_cambio`, `porcentaje_cambio` y `pct_orig` en precios.
 
 Nota: estos CSV contienen señal sintética reforzada; debe declararse en el informe como datos sintéticos regenerados.
+
+## Estructura detallada
+
+### `backend/` — API FastAPI
+
+```
+backend/
+├── config.py              # rutas, constantes, TAREAS, orígenes CORS permitidos
+├── main.py                # app FastAPI, lifespan (carga modelos), montado de frontend estático
+├── esquemas/
+│   ├── pedidos.json       # definición del formulario de "Demora del pedido"
+│   ├── resenas.json       # definición del formulario de "Satisfacción del cliente"
+│   └── precios.json       # definición del formulario de "Cambio de precio"
+├── referencias/
+│   ├── referencias.json   # ciudades, países, rangos numéricos, clases, rango de fechas
+│   └── traducciones.json  # mapeo inglés→español por campo de texto (NUEVO)
+├── rutas/
+│   ├── esquemas.py        # GET /api/esquemas/{tarea}
+│   ├── modelos.py         # GET /api/modelos, GET /api/salud
+│   └── prediccion.py      # POST /api/predecir/{tarea}
+├── servicios/
+│   ├── cargador_modelos.py        # carga .keras/.joblib, extrae categorías del OneHotEncoder
+│   ├── predictor.py               # orquestación: validación → variables → preprocesador → modelo → decodificación
+│   ├── validador.py               # conversión de tipos, límites, reconocimiento de categorías (español/inglés)
+│   ├── recursos.py                # lectura con caché de esquemas JSON y referencias
+│   └── ingenieria_variables.py    # construcción de fila y variables derivadas por tarea
+├── scripts/
+│   └── generar_referencias.py     # genera referencias.json (ciudades, rangos, clases, fechas base)
+└── pruebas/
+    ├── test_paridad.py              # paridad backend vs motor de preprocesamiento del entrenamiento
+    └── test_categorias_nuevas.py    # comportamiento con valores de categoría nuevos
+```
+
+### `frontend/` — Vite + React
+
+```
+frontend/
+├── index.html
+├── src/
+│   ├── main.tsx          # punto de entrada de React
+│   ├── App.tsx           # aplicación principal: pestañas de tareas, carga de esquemas
+│   ├── tipos.ts          # tipos TypeScript (Tarea, TipoCampo, ValorCampo, Esquema, Prediccion, etc.)
+│   ├── estilos.css       # estilos globales
+│   ├── api/
+│   │   └── cliente.ts    # cliente HTTP: obtenerEsquema, obtenerSalud, predecir
+│   └── components/
+│       ├── Campo.tsx             # campo individual de formulario (texto, número, fecha, booleano)
+│       ├── FormularioRed.tsx     # formulario completo: estado, envío, validación, ejemplo, limpiar
+│       └── ResultadoPrediccion.tsx # muestra la predicción, probabilidades y avisos
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
+
+### Otros archivos de la raíz
+
+- **`configuracion.py`**: constantes del entrenamiento (`SEED=42`, ratios 70/15/15, `EPOCHS=160`, `BATCH_SIZE=128`, `PATIENCE=18`), lista `CONFIGS` de 8 configuraciones de red a probar, diccionario `TASKS` con archivo CSV, columna objetivo y tipo por tarea, y `COLUMNAS_PROHIBIDAS` (columnas con fuga excluidas por tarea).
+- **`ejecutar_todo.py`**: ejecutor general que prepara los tres datasets cronológicamente y entrena las tres redes en orden.
+
+## API del backend y frontend
+
+La aplicación web consta de dos partes:
+
+- **Backend** (`backend/`): API FastAPI que sirve los esquemas de formulario, valida los datos de entrada y realiza predicciones con los modelos `.keras` entrenados.
+- **Frontend** (`frontend/`): aplicación Vite + React que consume la API y muestra el formulario y los resultados.
+
+### Endpoints del API
+
+Se ejecuta desde la raíz del proyecto:
+
+```bash
+uvicorn backend.main:app --port 8000
+```
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `GET /api/esquemas/{tarea}` | GET | Devuelve el esquema del formulario para una tarea (`pedidos`, `resenas`, `precios`). Incluye `valores_validos` (inglés, categorías del modelo) y `valores_validos_espanol` (traducción al español para mostrar al usuario). |
+| `GET /api/modelos` | GET | Lista las tres tareas con tipo de modelo, clases, métricas de test y dimensiones de entrada. |
+| `GET /api/salud` | GET | Estado de carga de modelos por tarea. |
+| `POST /api/predecir/{tarea}` | POST | Recibe `{"datos": {...}}` y devuelve la predicción con probabilidades por clase, confianza y advertencias. |
+
+Si se ejecutó `npm run build` en `frontend/`, el mismo servidor FastAPI entrega la interfaz estática en `http://localhost:8000`.
+
+### Traducción inglés↔español
+
+Los campos de tipo `texto` (ciudades, métodos de pago, cocinas, segmentos, categorías, etc.) tienen valores canónicos en inglés (lo que el modelo espera). El backend ofrece:
+
+- **`valores_validos`**: lista de valores en inglés (para el modelo).
+- **`valores_validos_espanol`**: lista de pares `{ "espanol": "...", "ingles": "..." }` para mostrar en el frontend.
+
+Las traducciones se definen en `backend/referencias/traducciones.json`. El validador de texto (`backend/servicios/validador.py`) acepta entrada en español o inglés:
+1. Si el usuario escribe un valor en español que tenga traducción, se normaliza al inglés canónico antes del modelo.
+2. Si escribe un valor ya en inglés conocido, se usa tal cual.
+3. Si escribe un valor nuevo (no en la lista), se acepta texto libre y el `OneHotEncoder` lo codifica con ceros (`handle_unknown="ignore"`).
+
+Esto permite al usuario elegir de la lista en español o escribir cualquier texto libre.
+
+### Ejecutar el frontend
+
+```bash
+cd frontend
+npm install          # primera vez
+npm run dev          # servidor de desarrollo en http://localhost:5173
+npm run build        # build para producción (genera frontend/dist/)
+```
+
+### Pruebas y utilidades del backend
+
+Ejecutar las pruebas de paridad y categorías nuevas:
+
+```bash
+python -m backend.pruebas.test_paridad
+python -m backend.pruebas.test_categorias_nuevas
+```
+
+Regenerar `backend/referencias/referencias.json` (ciudades, rangos, clases, fechas base):
+
+```bash
+python -m backend.scripts.generar_referencias
+```
 
 ## Instalación
 
