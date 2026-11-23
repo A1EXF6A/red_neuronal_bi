@@ -83,6 +83,16 @@ export default function Campo({ campo, valor, error, onCambio }: Props) {
   // Procesa un cambio
   const manejarCambio = (e: React.ChangeEvent<HTMLInputElement>) => {
     const limpio = filtrar(e.target.value);
+    if (esNumerico && limpio !== "") {
+      const numero = Number(limpio.replace(",", "."));
+      if (
+        Number.isFinite(numero) &&
+        ((campo.min !== undefined && numero < campo.min) ||
+          (campo.max !== undefined && numero > campo.max))
+      ) {
+        return;
+      }
+    }
     onCambio(campo.nombre, limpio);
   };
 
@@ -96,8 +106,11 @@ export default function Campo({ campo, valor, error, onCambio }: Props) {
         <input
           id={id}
           name={campo.nombre}
-          type={esFecha ? "date" : "text"}
+          type={esFecha ? "date" : esNumerico ? "number" : "text"}
           inputMode={modo}
+          min={esNumerico ? campo.min : undefined}
+          max={esNumerico ? campo.max : undefined}
+          step={campo.tipo === "entero" ? 1 : esNumerico ? "any" : undefined}
           pattern={esTexto ? "[a-zA-ZáéíóúñÁÉÍÓÚÑüÜ\\s]*" : esNumerico ? "[0-9.,-]*" : undefined}
           placeholder={marcador}
           value={String(valor)}
