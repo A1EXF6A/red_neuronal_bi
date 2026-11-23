@@ -1,12 +1,4 @@
-"""Orquesta la predicción de un dato nuevo aplicando el MISMO proceso del entrenamiento.
-
-  1. Validar y normalizar lo escrito en el formulario
-  2. Calcular variables derivadas (fecha, tarifa_por_km, país, ...)
-  3. Armar el DataFrame con `columnas_antes_de_codificar` (metadata.json)
-  4. preprocesador_<tarea>.joblib  (imputación + escalado + One-Hot, ajustados solo con train)
-  5. modelo_<tarea>.keras          (predict)
-  6. codificador_<tarea>.joblib    (número -> clase)
-"""
+# Coordina el proceso de prediccion
 from __future__ import annotations
 
 import numpy as np
@@ -19,12 +11,14 @@ from backend.servicios.recursos import cargar_esquema, referencias
 from backend.servicios.validador import ErrorValidacion, avisos_categorias_nuevas, avisos_de_rango, validar
 
 
+# Representa un modelo no disponible
 class ModeloNoDisponible(Exception):
     pass
 
 
+# Obtiene variables imputadas
 def _imputadas(df: pd.DataFrame, art, previas: list) -> list[dict]:
-    """Variables numéricas sin valor que el preprocesador completará con la mediana de train."""
+    # Obtiene variables numericas sin valor
     resultado = list(previas)
     for col, mediana in art.medianas.items():
         if col in df.columns and pd.isna(df.at[0, col]):
@@ -32,6 +26,7 @@ def _imputadas(df: pd.DataFrame, art, previas: list) -> list[dict]:
     return resultado
 
 
+# Realiza una prediccion
 def predecir(tarea: str, datos: dict) -> dict:
     if tarea not in TAREAS:
         raise KeyError(tarea)
@@ -44,7 +39,7 @@ def predecir(tarea: str, datos: dict) -> dict:
 
     esquema, ref = cargar_esquema(tarea), referencias()
 
-    # 1) validar y normalizar
+    # Validar datos
     valores, errores = validar(esquema, datos, art.indice_categorias)
     if errores:
         raise ErrorValidacion(errores)
@@ -54,27 +49,27 @@ def predecir(tarea: str, datos: dict) -> dict:
 
     advertencias += avisos_categorias_nuevas(esquema, valores, art.indice_categorias)
 
-    # 2) variables derivadas
+    # Variables derivadas
     fila = construir_fila(tarea, valores, ref, art.medianas)
     advertencias += fila.avisos
 
-    # 3) mismo conjunto y orden de columnas que en entrenamiento
+    # Ordenar columnas
     faltan = [c for c in art.columnas if c not in fila.df.columns]
     if faltan:
         raise RuntimeError(f"Faltan columnas para el preprocesador: {faltan}")
     df = fila.df[art.columnas]
 
-    # 4) preprocesador ajustado con train
+    # Preprocesar
     X = art.preprocesador.transform(df).astype("float32")
     esperado = int(art.metadata["dimensiones_entrada"])
     if X.shape[1] != esperado:
         raise RuntimeError(f"Dimensión de entrada {X.shape[1]} != {esperado} del entrenamiento")
 
-    # 5) modelo
+    # Ejecutar modelo
     with art.lock:
         salida = np.asarray(art.modelo.predict(X, verbose=0), dtype="float64")
 
-    # 6) probabilidades -> clase
+    # Obtener clase
     if salida.shape[-1] == 1:                       # binario con sigmoide
         p1 = float(salida[0, 0])
         probabilidades = [1.0 - p1, p1]

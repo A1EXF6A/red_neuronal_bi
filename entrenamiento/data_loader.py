@@ -1,4 +1,4 @@
-"""Carga de particiones preparadas, codificación de etiquetas y preprocesador (ajustado solo con train)."""
+# Carga de datos y preprocesador
 import sys
 from pathlib import Path
 import joblib
@@ -15,6 +15,7 @@ from sklearn.pipeline import Pipeline
 from configuracion import DATA_PROCESSED, TASKS
 
 
+# Construye el preprocesador
 def make_preprocessor(X_train):
     numeric = X_train.select_dtypes(include=["number"]).columns.tolist()
     categorical = X_train.select_dtypes(include=["object", "string", "category"]).columns.tolist()
@@ -33,12 +34,9 @@ def make_preprocessor(X_train):
     ], remainder="drop")
 
 
+# Carga los datos preparados
 def cargar_datos(task_name):
-    """Devuelve un diccionario con todo lo que necesitan las etapas siguientes.
-
-    Claves: task, bundle, X_train_df, X_val_df, X_test_df, X_train, X_val, X_test,
-            y_train, y_val, y_test, label_encoder, preprocessor, feature_names.
-    """
+    # Devuelve los datos preparados para el entrenamiento
     task = TASKS[task_name]
     split_path = DATA_PROCESSED / task_name / "particiones.joblib"
     if not split_path.exists():
@@ -64,7 +62,7 @@ def cargar_datos(task_name):
     y_val = label_encoder.transform(y_val_raw)
     y_test = label_encoder.transform(y_test_raw)
 
-    # Ajuste de imputación, escalado y categorías SOLO en el conjunto train.
+    # Ajuste con train
     preprocessor = make_preprocessor(X_train_df)
     X_train = preprocessor.fit_transform(X_train_df).astype("float32")
     X_val = preprocessor.transform(X_val_df).astype("float32")

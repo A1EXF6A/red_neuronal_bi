@@ -1,14 +1,4 @@
-"""Variables derivadas de cada red, calculadas con las MISMAS fórmulas del entrenamiento.
-
-Origen de cada fórmula:
-  - Fechas (fecha_*, mes_sin, dia_semana_sin, ...): se reutiliza `add_date_features`
-    de preprocesamiento/motor_preprocesamiento.py (misma función que usó el entrenamiento).
-  - Resto (tarifa_por_km, dist_x_pico, antiguedad_cliente_dias, ...): replicadas de
-    generacion_datos/preparar_datos_reforzados.py y verificadas contra los CSV originales
-    por backend/pruebas/test_paridad.py.
-
-No depende de FastAPI ni de TensorFlow.
-"""
+# Calcula variables derivadas para las predicciones
 from __future__ import annotations
 
 import math
@@ -18,53 +8,51 @@ from datetime import date
 import numpy as np
 import pandas as pd
 
-from backend.config import RAIZ  # noqa: F401  (asegura sys.path hacia la raíz del proyecto)
+from backend.config import RAIZ  # noqa: F401  (ruta del proyecto)
 from backend.servicios.validador import campos_planos, clave_texto
 from preprocesamiento.motor_preprocesamiento import add_date_features
 
 NAN = float("nan")
 
-# Cortes de tiempo de entrega (min) que definen el nivel de demora: <=42, <=51, <=60, >60.
-# El generador usa np.digitize(tiempo, [c + 0.5 for c in cortes]).
+# Cortes de demora
 CORTES_DEMORA = (42, 51, 60)
 
 
 @dataclass
+# Contiene una fila construida
 class FilaConstruida:
     df: pd.DataFrame
     avisos: list = field(default_factory=list)
-    imputadas_previas: list = field(default_factory=list)  # completadas antes del preprocesador
+    imputadas_previas: list = field(default_factory=list)  # datos previos
 
 
-# ---------------------------------------------------------------- piezas comunes
+# Funciones comunes
+# Obtiene datos del calendario
 def _calendario(f: date) -> dict:
-    """Columnas de calendario que ya venían en los CSV (no las crea add_date_features)."""
+    # Devuelve columnas de calendario
     return {
-        "dia": f.day,                                     # día del mes (1-31)
+        "dia": f.day,                                     # dia del mes
         "es_fin_de_semana": int(f.weekday() >= 5),
-        "semana_anio": int(f.strftime("%U")) + 1,         # igual que en los datos (verificado 100 %)
+        "semana_anio": int(f.strftime("%U")) + 1,         # semana del ano
         "mes": f.month,
         "trimestre": (f.month - 1) // 3 + 1,
         "anio": f.year,
     }
 
 
+# Agrega variables de fecha
 def _con_fechas(columnas: dict, f: date) -> pd.DataFrame:
-    """Arma el DataFrame de una fila y añade las variables de fecha como en el entrenamiento."""
+    # Crea un DataFrame con variables de fecha
     df = pd.DataFrame([{**columnas, "fecha": f.isoformat()}])
     return add_date_features(df)
 
 
-DESCONOCIDO = "Desconocido"   # categoría que el OneHotEncoder no vio -> todo ceros (se ignora)
+DESCONOCIDO = "Desconocido"   # categoria desconocida
 
 
+# Obtiene datos del pais
 def _pais(ref: dict, ciudad: str, pais_indicado=None, avisos: list | None = None) -> tuple[str, str, bool]:
-    """(país, código, conocido). Funciona también con ciudades que no estaban en el entrenamiento.
-
-    1) Ciudad conocida  -> país y código de las referencias.
-    2) Ciudad nueva + país escrito por la persona -> ese país (código si el país es conocido).
-    3) Ciudad nueva sin país -> «Desconocido» (el modelo lo ignora; no se inventa un país).
-    """
+    # Obtiene pais y codigo de una ciudad
     ciudades = {clave_texto(c): info for c, info in ref["ciudades"].items()}
     info = ciudades.get(clave_texto(ciudad))
     if info:
@@ -83,8 +71,9 @@ def _pais(ref: dict, ciudad: str, pais_indicado=None, avisos: list | None = None
     return DESCONOCIDO, DESCONOCIDO, False
 
 
+# Compara dos paises
 def _mismo_pais(pais_a, conocido_a, pais_b, conocido_b, misma_ciudad: bool):
-    """1/0 si se conocen ambos países; si no, NaN (el preprocesador usa la mediana de train)."""
+    # Compara los paises
     if misma_ciudad:
         return 1
     if conocido_a and conocido_b:
@@ -92,16 +81,19 @@ def _mismo_pais(pais_a, conocido_a, pais_b, conocido_b, misma_ciudad: bool):
     return NAN
 
 
+# Convierte un valor a entero
 def _entero(valor: bool) -> int:
     return int(bool(valor))
 
 
+# Convierte un valor numerico
 def _num(valor):
-    """None -> NaN (el preprocesador lo imputa con la mediana de train)."""
+    # Convierte valores vacios a NaN
     return NAN if valor is None else valor
 
 
-# ---------------------------------------------------------------- PEDIDOS
+# PEDIDOS
+# Construye una fila de pedidos
 def fila_pedidos(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
     f = v["fecha"]
     avisos = []
@@ -117,12 +109,12 @@ def fila_pedidos(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
 
     columnas = {
         **_calendario(f),
-        # cliente
+        # Cliente
         "ciudad_cliente": v["ciudad_cliente"], "pais_cliente": pais_c, "codigo_pais_cliente": cod_c,
         "segmento_cliente": v["segmento_cliente"],
         "metodo_pago_preferido_cliente": v["metodo_pago_preferido_cliente"],
         "cliente_activo": _entero(v["cliente_activo"]),
-        # restaurante
+        # Restaurante
         "cocina_restaurante": v["cocina_restaurante"],
         "ciudad_restaurante": v["ciudad_restaurante"], "pais_restaurante": pais_r,
         "codigo_pais_restaurante": cod_r,
@@ -133,11 +125,11 @@ def fila_pedidos(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
         "tiene_wifi": _entero(v["tiene_wifi"]),
         "acepta_tarjeta": _entero(v["acepta_tarjeta"]),
         "restaurante_activo": _entero(v["restaurante_activo"]),
-        # pedido
+        # Pedido
         "metodo_pago": v["metodo_pago"],
         "monto_total": v["monto_total"], "tarifa_entrega": v["tarifa_entrega"],
         "distancia_km": dist, "multiplicador_hora_pico": mult,
-        # derivadas del pedido
+        # Variables derivadas
         "tarifa_por_km": v["tarifa_entrega"] / dist,
         "monto_por_km": v["monto_total"] / dist,
         "log_distancia": float(np.log1p(dist)),
@@ -146,7 +138,7 @@ def fila_pedidos(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
         "cliente_misma_ciudad": int(misma_ciudad),
         "cliente_mismo_pais": _mismo_pais(pais_c, ok_c, pais_r, ok_r, misma_ciudad),
         "antiguedad_cliente_dias": max(0, antiguedad),
-        # historial (opcional): NaN -> mediana de train en el preprocesador
+        # Historial
         "hist_tiempo_restaurante": _num(v.get("hist_tiempo_restaurante")),
         "hist_n_pedidos_restaurante": _num(v.get("hist_n_pedidos_restaurante")),
         "hist_tiempo_ciudad": _num(v.get("hist_tiempo_ciudad")),
@@ -154,7 +146,8 @@ def fila_pedidos(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
     return FilaConstruida(_con_fechas(columnas, f), avisos)
 
 
-# ---------------------------------------------------------------- RESEÑAS
+# RESENAS
+# Construye una fila de resenas
 def fila_resenas(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
     f = v["fecha"]
     avisos = []
@@ -166,8 +159,7 @@ def fila_resenas(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
 
     hist = v.get("hist_tiempo_restaurante")
     if hist is None:
-        # tiempo_vs_esperado se calcula contra el histórico; si falta, se usa la mediana de train
-        # (en el entrenamiento este campo nunca estuvo vacío).
+        # Tiempo esperado
         hist = float(medianas["hist_tiempo_restaurante"])
         previas.append({"nombre": "hist_tiempo_restaurante", "valor": round(hist, 6)})
 
@@ -189,7 +181,8 @@ def fila_resenas(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
     return FilaConstruida(_con_fechas(columnas, f), avisos, previas)
 
 
-# ---------------------------------------------------------------- PRECIOS
+# PRECIOS
+# Construye una fila de precios
 def fila_precios(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
     f = v["fecha"]
     base = date.fromisoformat(ref["fecha_base_precios"])
@@ -202,10 +195,10 @@ def fila_precios(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
     if tiene_historial:
         lag = v["pct_cambio_anterior"]
         dias_anterior = v["dias_desde_anterior"]
-        # Con un solo evento previo, "último" y "media previa" coinciden con ese cambio.
+        # Historial de precios
         ultimo = media_previa = lag
     else:
-        # Primer cambio del ítem: mismos valores de relleno que usó el generador de datos.
+        # Primer cambio
         lag = const["lag_pct_sin_historial"]
         dias_anterior = const["dias_desde_anterior_sin_historial"]
         ultimo = media_previa = NAN
@@ -229,7 +222,7 @@ def fila_precios(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
         "hist_eventos_previos": n_cambio,
         "hist_pct_ultimo": ultimo,
         "hist_pct_media_previa": media_previa,
-        "hist_pct_std_previa": NAN,   # en train es siempre NaN; el imputador la ignora
+        "hist_pct_std_previa": NAN,   # valor inicial
         "mes_sin": float(np.sin(2 * np.pi * f.month / 12)),
         "mes_cos": float(np.cos(2 * np.pi * f.month / 12)),
     }
@@ -243,13 +236,15 @@ CONSTRUCTORES = {
 }
 
 
+# Construye una fila para la tarea
 def construir_fila(tarea: str, valores: dict, ref: dict, medianas: dict) -> FilaConstruida:
     return CONSTRUCTORES[tarea](valores, ref, medianas)
 
 
-# ---------------------------------------------------------------- resumen para la interfaz
+# Resumen para la interfaz
+# Convierte un valor a tipo Python
 def _py(x):
-    """numpy/pandas -> tipos JSON simples."""
+    # Convierte valores a tipos JSON
     if isinstance(x, (np.integer,)):
         return int(x)
     if isinstance(x, (np.floating, float)):
@@ -257,8 +252,9 @@ def _py(x):
     return x
 
 
+# Lista las variables calculadas
 def variables_calculadas(df: pd.DataFrame, esquema: dict) -> list[dict]:
-    """Columnas que el sistema derivó (no las escribió el usuario) y que tienen valor."""
+    # Devuelve variables calculadas
     ingresadas = {c["nombre"] for c in campos_planos(esquema)}
     salida = []
     for col in df.columns:

@@ -1,4 +1,4 @@
-"""API de predicción. Desde la raíz del proyecto:  uvicorn backend.main:app --port 8000"""
+# API de prediccion
 import logging
 from contextlib import asynccontextmanager
 
@@ -14,8 +14,9 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(name)s: %(messa
 
 
 @asynccontextmanager
+# Gestiona el ciclo de vida
 async def ciclo_de_vida(_app: FastAPI):
-    cargador_modelos.cargar_todo()   # carga .keras y .joblib una sola vez
+    cargador_modelos.cargar_todo()   # carga modelos
     yield
 
 
@@ -32,6 +33,6 @@ app.include_router(modelos.router)
 app.include_router(esquemas.router)
 app.include_router(prediccion.router)
 
-# Si ya se hizo `npm run build`, el mismo servidor entrega la interfaz en http://localhost:8000
+# Servir interfaz compilada
 if FRONTEND_DIST.exists():
     app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="interfaz")

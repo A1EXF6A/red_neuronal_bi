@@ -1,4 +1,4 @@
-"""Guarda el modelo .keras, los artefactos .joblib y los metadatos de cada red."""
+# Guarda modelos y artefactos
 import sys
 from pathlib import Path
 import json
@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
 from configuracion import MODELS, ARTIFACTS, results_dir
 
 
+# Exporta los resultados
 def exportar_todo(datos, seleccion, evaluacion, task_name, extras=None):
     task = datos["task"]
     label_encoder = datos["label_encoder"]
@@ -43,7 +44,7 @@ def exportar_todo(datos, seleccion, evaluacion, task_name, extras=None):
         "activacion_salida": "softmax" if task["kind"] == "multiclass" else "sigmoid",
         "nota": "Preprocesador ajustado solo con train; conjunto de prueba temporal reservado hasta la evaluación final.",
     }
-    # Campos nuevos (no alteran los existentes): rutas de correlaciones y pesos exportados.
+    # Rutas de resultados
     if extras:
         metadata.update(extras)
 

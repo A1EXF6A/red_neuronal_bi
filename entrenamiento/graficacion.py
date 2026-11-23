@@ -1,4 +1,4 @@
-"""Todos los gráficos. Cada red guarda los suyos en graficos/<tarea>/."""
+# Genera graficos del entrenamiento
 import sys
 from pathlib import Path
 import numpy as np
@@ -13,17 +13,19 @@ if str(ROOT) not in sys.path:
 
 from configuracion import plots_dir
 
-MAX_ETIQUETAS_EJE = 60      # por encima de este número de filas/columnas no se rotulan los ejes
-TOP_CORRELACION = 20        # variables mostradas en el gráfico de correlación con la etiqueta
+MAX_ETIQUETAS_EJE = 60      # limite de etiquetas
+TOP_CORRELACION = 20        # variables principales
 
 
+# Define la ruta de un grafico
 def _destino(task_name, nombre):
     carpeta = plots_dir(task_name)
     carpeta.mkdir(parents=True, exist_ok=True)
     return carpeta / nombre
 
 
-# ---------------------------------------------------------------- evaluación
+# Evaluacion
+# Grafica la matriz de confusion
 def graficar_matriz_confusion(matrix, clases, task_name):
     plt.figure(figsize=(7, 6))
     sns.heatmap(
@@ -40,6 +42,7 @@ def graficar_matriz_confusion(matrix, clases, task_name):
     return ruta
 
 
+# Grafica la comparacion de experimentos
 def graficar_comparacion_experimentos(experiment_rows, task_name):
     plt.figure(figsize=(10, 5))
     labels = [
@@ -57,17 +60,19 @@ def graficar_comparacion_experimentos(experiment_rows, task_name):
     return ruta
 
 
+# Guarda los graficos
 def guardar_graficos(datos, seleccion, evaluacion, task_name):
-    """Gráficos de evaluación (matriz de confusión y comparación de experimentos)."""
+    # Genera graficos de evaluacion
     return [
         graficar_matriz_confusion(evaluacion["matrix"], datos["label_encoder"].classes_, task_name),
         graficar_comparacion_experimentos(seleccion["experiment_rows"], task_name),
     ]
 
 
-# -------------------------------------------------------------- correlaciones
+# Correlaciones
+# Grafica correlaciones de variables
 def graficar_correlacion_variables(corr, task_name):
-    """Heatmap (triángulo inferior) de la correlación entre variables numéricas originales."""
+    # Genera heatmap de correlaciones
     n = corr.shape[0]
     lado = min(max(7, 0.38 * n), 22)
     mascara = np.triu(np.ones_like(corr, dtype=bool), k=1)
@@ -87,8 +92,9 @@ def graficar_correlacion_variables(corr, task_name):
     return ruta
 
 
+# Grafica correlaciones con la etiqueta
 def graficar_correlacion_etiqueta(serie, task_name, top=TOP_CORRELACION):
-    """Barras horizontales con las variables más correlacionadas (Spearman) con la etiqueta."""
+    # Genera barras de correlacion
     serie = serie.dropna()
     seleccion = serie.reindex(serie.abs().sort_values(ascending=False).index)[:top][::-1]
     plt.figure(figsize=(8, max(4, 0.32 * len(seleccion) + 1.5)))
@@ -105,15 +111,17 @@ def graficar_correlacion_etiqueta(serie, task_name, top=TOP_CORRELACION):
     return ruta
 
 
-# ---------------------------------------------------------------------- pesos
+# Pesos
+# Limpia graficos de pesos
 def limpiar_graficos_pesos(task_name):
-    """Borra heatmaps de pesos de ejecuciones anteriores (la cantidad de capas puede cambiar)."""
+    # Limpia heatmaps anteriores
     for archivo in plots_dir(task_name).glob("pesos_capa_oculta_*.png"):
         archivo.unlink()
 
 
+# Grafica los pesos
 def graficar_pesos(matrices, task_name, nombres_entrada=None):
-    """Un heatmap por cada matriz W de capa oculta del mejor modelo."""
+    # Genera heatmaps de capas ocultas
     limpiar_graficos_pesos(task_name)
     rutas = []
     for i, W in enumerate(matrices, start=1):

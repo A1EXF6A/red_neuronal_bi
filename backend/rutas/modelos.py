@@ -1,4 +1,4 @@
-"""GET /api/salud y GET /api/modelos."""
+# Rutas de modelos
 from fastapi import APIRouter
 
 from backend.config import TAREAS
@@ -9,6 +9,7 @@ router = APIRouter(prefix="/api", tags=["modelos"])
 
 
 @router.get("/salud")
+# Devuelve el estado del servicio
 def salud():
     estado = cargador.estado()
     todo_listo = all(e["modelo"] for e in estado.values())
@@ -16,6 +17,7 @@ def salud():
 
 
 @router.get("/modelos")
+# Lista los modelos disponibles
 def listar_modelos():
     salida = []
     for tarea in TAREAS:

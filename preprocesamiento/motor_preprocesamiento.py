@@ -1,8 +1,4 @@
-"""Preparación determinista de variables y partición temporal de cada dataset.
-
-Importante: aquí NO se ajustan imputadores, escaladores ni OneHotEncoder.
-Esos pasos aprenden parámetros y se ajustan posteriormente usando SOLO train.
-"""
+# Prepara variables y particiones temporales
 import sys
 from pathlib import Path
 import numpy as np
@@ -18,6 +14,7 @@ from configuracion import (
 )
 
 
+# Lee un archivo CSV
 def read_csv(name):
     path = DATA_ORIGINAL / name
     if not path.exists():
@@ -25,6 +22,7 @@ def read_csv(name):
     return pd.read_csv(path)
 
 
+# Agrega variables de fecha
 def add_date_features(df):
     df = df.copy()
     if "fecha" in df.columns:
@@ -42,26 +40,25 @@ def add_date_features(df):
     return df
 
 
+# Prepara pedidos
 def prepare_orders():
     df = read_csv(TASKS["pedidos"]["file"])
     y = df[TASKS["pedidos"]["target"]].copy()
     X = df.drop(columns=[c for c in COLUMNAS_PROHIBIDAS["pedidos"] if c in df.columns])
-    # Se conservan las variables derivadas del CSV reforzado: tarifa_por_km, dist_x_pico,
-    # es_hora_pico, cliente_misma_ciudad, antiguedad_cliente_dias y los históricos
-    # hist_tiempo_restaurante / hist_tiempo_ciudad (solo usan pedidos anteriores).
+    # Variables derivadas de pedidos
     return add_date_features(X), y, df["fecha"]
 
 
+# Prepara resenas
 def prepare_reviews():
-    # El CSV reforzado de reseñas ya trae unidas las variables del pedido (tiempo de entrega,
-    # distancia, tarifa, hora pico, nivel de demora, histórico del restaurante), así que ya no
-    # se necesita cruzar con pedidos. Todas están disponibles tras la entrega y antes de la reseña.
+    # Variables derivadas de resenas
     reviews = read_csv(TASKS["resenas"]["file"])
     y = reviews[TASKS["resenas"]["target"]].copy()
     X = reviews.drop(columns=[c for c in COLUMNAS_PROHIBIDAS["resenas"] if c in reviews.columns])
     return add_date_features(X), y, reviews["fecha"]
 
 
+# Agrega historial de precios
 def add_price_history(df):
     df = df.copy()
     df["fecha_dt"] = pd.to_datetime(df["fecha"], errors="coerce")
@@ -69,7 +66,7 @@ def add_price_history(df):
     if not keys:
         keys = ["item_menu_key", "restaurante_key"]
 
-    # Se agregan eventos por fecha y entidad; shift(1) impide usar el evento actual.
+    # Historial sin evento actual
     hist = df.groupby(keys + ["fecha_dt"], dropna=False).agg(
         hist_pct_media_evento=("porcentaje_cambio", "mean"),
         hist_eventos_dia=("porcentaje_cambio", "size"),
@@ -94,6 +91,7 @@ def add_price_history(df):
     return add_date_features(df)
 
 
+# Prepara precios
 def prepare_prices():
     df = read_csv(TASKS["precios"]["file"])
     y = df[TASKS["precios"]["target"]].copy()
@@ -101,6 +99,7 @@ def prepare_prices():
     return X, y, df["fecha"]
 
 
+# Limpia las variables
 def clean_features(X):
     X = X.copy()
     drop = []
@@ -123,6 +122,7 @@ def clean_features(X):
     return X
 
 
+# Divide los datos por fecha
 def chronological_split(X, y, dates):
     dt = pd.to_datetime(dates, errors="coerce")
     order = np.argsort(dt.fillna(pd.Timestamp.min).values, kind="stable")
@@ -149,16 +149,9 @@ def chronological_split(X, y, dates):
     )
 
 
+# Exporta las particiones
 def export_csv(output_dir, task_name, parts):
-    """Guarda un único CSV con todas las particiones: fecha, particion, variables preparadas y etiqueta.
-
-    - `particion` vale train / validation / test; las filas van en orden cronológico
-      (train = fechas más antiguas, test = más recientes).
-    - `fecha` es solo de referencia, no es una característica (las variables de fecha ya están derivadas).
-    - La etiqueta es la última columna.
-    Son los mismos datos de particiones.joblib, aún sin imputación, escalado ni One-Hot
-    (esos pasos se ajustan en el entrenamiento solo con train).
-    """
+    # Guarda un CSV con las particiones
     target = TASKS[task_name]["target"]
     tables = []
     for name, (X_part, y_part, d_part) in parts.items():
@@ -173,6 +166,7 @@ def export_csv(output_dir, task_name, parts):
     return path.name
 
 
+# Prepara una tarea
 def prepare_task(task_name):
     if task_name == "pedidos":
         X, y, dates = prepare_orders()
@@ -192,7 +186,7 @@ def prepare_task(task_name):
     splits = chronological_split(X, y, dates)
     X_train, X_val, X_test, y_train, y_val, y_test, d_train, d_val, d_test = splits
 
-    # Validar que todas las clases estén presentes en entrenamiento.
+    # Validar clases
     classes_train = set(y_train.astype(str).unique())
     classes_all = set(y.astype(str).unique())
     if classes_train != classes_all:

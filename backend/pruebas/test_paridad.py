@@ -1,16 +1,4 @@
-"""Prueba de paridad: el backend debe producir las MISMAS variables que el entrenamiento.
-
-Toma filas reales de datos/originales/, las convierte a lo que escribiría una persona en el
-formulario, las pasa por validación + ingeniería de variables del backend y compara contra
-las columnas que genera el motor de preprocesamiento (el que alimentó el entrenamiento).
-Después compara también la salida del preprocesador .joblib (la entrada real de la red).
-
-No necesita TensorFlow ni FastAPI.
-
-Uso (desde la raíz del proyecto):
-    python -m backend.pruebas.test_paridad
-    pytest backend/pruebas/test_paridad.py        (si tienes pytest)
-"""
+# Prueba la paridad entre backend y entrenamiento
 from __future__ import annotations
 
 import math
@@ -31,25 +19,26 @@ from preprocesamiento.motor_preprocesamiento import (
 MUESTRA = 400
 SEMILLA = 0
 
-# Diferencias aceptadas y documentadas (columna -> tolerancia absoluta).
-# hist_pct_ultimo / hist_pct_media_previa: el entrenamiento las calcula con el % recalculado
-# desde precios redondeados; el formulario usa el % del cambio anterior (difiere <= 0.1).
+# Tolerancias de paridad
 TOLERANCIAS = {
     "precios": {"hist_pct_ultimo": 0.11, "hist_pct_media_previa": 0.11},
 }
 
 
+# Convierte un valor a booleano
 def _bool(x) -> bool:
     return bool(int(x))
 
 
+# Obtiene un valor opcional
 def _opcional(fila, col):
     valor = fila[col]
     return None if pd.isna(valor) else valor
 
 
+# Convierte una fila al formulario
 def _formulario(tarea: str, f: pd.Series) -> dict:
-    """Lo que una persona escribiría en el formulario a partir de una fila real."""
+    # Convierte una fila a datos del formulario
     fecha = str(f["fecha"])[:10]
     if tarea == "pedidos":
         return {
@@ -95,8 +84,9 @@ def _formulario(tarea: str, f: pd.Series) -> dict:
     return datos
 
 
+# Obtiene datos de referencia
 def _referencia(tarea: str) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """(CSV original, variables que produce el motor de preprocesamiento), misma fila a fila."""
+    # Compara variables procesadas
     if tarea == "pedidos":
         X, _, _ = prepare_orders()
         original = pd.read_csv(DATOS_ORIGINALES / "pedidos_reforzado_etiquetado.csv")
@@ -111,6 +101,7 @@ def _referencia(tarea: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     return original, X
 
 
+# Compara dos valores
 def _iguales(a, b, tol: float) -> bool:
     a_nan = isinstance(a, float) and math.isnan(a)
     b_nan = isinstance(b, float) and math.isnan(b)
@@ -121,6 +112,7 @@ def _iguales(a, b, tol: float) -> bool:
     return abs(float(a) - float(b)) <= max(tol, 1e-6 * max(abs(float(a)), abs(float(b))))
 
 
+# Comprueba la paridad
 def comprobar(tarea: str) -> dict:
     art = cargar_artefactos(tarea)
     esquema, ref = cargar_esquema(tarea), referencias()
@@ -152,7 +144,7 @@ def comprobar(tarea: str) -> dict:
         filas_backend.append(df)
         filas_ref.append(esperado)
 
-    # Entrada real de la red: salida del preprocesador .joblib
+    # Entrada de la red
     max_dif = 0.0
     if filas_backend:
         A = art.preprocesador.transform(pd.concat(filas_backend, ignore_index=True))
@@ -164,21 +156,25 @@ def comprobar(tarea: str) -> dict:
             "diferencias": diferencias, "max_dif_preprocesada": max_dif}
 
 
+# Verifica una tarea
 def _verificar(tarea: str) -> None:
     r = comprobar(tarea)
     assert not r["diferencias"], "\n".join(r["diferencias"][:15])
-    # con las tolerancias de TOLERANCIAS la entrada escalada puede variar unas centésimas
+    # Variacion permitida
     assert r["max_dif_preprocesada"] < 0.1, f"Diferencia en la entrada de la red: {r['max_dif_preprocesada']}"
 
 
+# Prueba la paridad de pedidos
 def test_paridad_pedidos():
     _verificar("pedidos")
 
 
+# Prueba la paridad de resenas
 def test_paridad_resenas():
     _verificar("resenas")
 
 
+# Prueba la paridad de precios
 def test_paridad_precios():
     _verificar("precios")
 

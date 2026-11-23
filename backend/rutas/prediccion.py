@@ -1,4 +1,4 @@
-"""POST /api/predecir/{tarea}"""
+# Ruta de prediccion
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -11,11 +11,13 @@ from backend.servicios.validador import ErrorValidacion
 router = APIRouter(prefix="/api", tags=["prediccion"])
 
 
+# Define una solicitud de prediccion
 class Solicitud(BaseModel):
     datos: dict[str, Any]
 
 
 @router.post("/predecir/{tarea}")
+# Procesa una prediccion
 def predecir(tarea: str, solicitud: Solicitud):
     if tarea not in TAREAS:
         raise HTTPException(status_code=404, detail=f"Tarea desconocida: {tarea}")

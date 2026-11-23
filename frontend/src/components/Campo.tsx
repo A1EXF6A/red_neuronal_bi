@@ -8,10 +8,8 @@ interface Props {
   onCambio: (nombre: string, valor: ValorCampo) => void;
 }
 
-/**
- * Un campo del formulario. Solo hay entradas de texto, número y fecha, e interruptores Sí/No.
- * Los campos de texto solo aceptan letras; los numéricos solo aceptan dígitos.
- */
+/** Campo del formulario. */
+// Renderiza un campo
 export default function Campo({ campo, valor, error, onCambio }: Props) {
   const id = useId();
   const idAyuda = `${id}-ayuda`;
@@ -67,18 +65,22 @@ export default function Campo({ campo, valor, error, onCambio }: Props) {
   const marcador =
     !esFecha && campo.ejemplo !== undefined ? `Ej.: ${String(campo.ejemplo)}` : undefined;
 
+  // Filtra texto
   const filtrarTexto = (valorEntrada: string): string =>
     valorEntrada.replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑüÜ\s]/g, "");
 
+  // Filtra numeros
   const filtrarNumero = (valorEntrada: string): string =>
     valorEntrada.replace(/[^0-9.,-]/g, "");
 
+  // Filtra una entrada
   const filtrar = (valorEntrada: string): string => {
     if (esTexto) return filtrarTexto(valorEntrada);
     if (esNumerico) return filtrarNumero(valorEntrada);
     return valorEntrada;
   };
 
+  // Procesa un cambio
   const manejarCambio = (e: React.ChangeEvent<HTMLInputElement>) => {
     const limpio = filtrar(e.target.value);
     onCambio(campo.nombre, limpio);

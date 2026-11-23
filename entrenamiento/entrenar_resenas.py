@@ -1,4 +1,4 @@
-"""Entrena únicamente el modelo de resenas."""
+# Entrena resenas
 from motor_entrenamiento import train_task
 
 if __name__ == "__main__":

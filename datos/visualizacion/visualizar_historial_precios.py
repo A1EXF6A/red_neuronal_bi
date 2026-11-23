@@ -1,5 +1,5 @@
-# Visualizacion de clases: Historial de precios
-# Instalar dependencias: pip install pandas numpy scikit-learn matplotlib
+# Visualizacion de precios
+# Dependencias
 
 import pandas as pd
 import numpy as np
@@ -16,7 +16,7 @@ RANDOM_STATE = 42
 
 df = pd.read_csv(ARCHIVO)
 
-# Excluir etiquetas, identificadores, fechas y texto descriptivo.
+# Variables excluidas
 excluir_exactas = {
     ETIQUETA, "fecha", "nombre_mes", "nombre_item", "nombre_restaurante",
     "cocina_item", "cocina_restaurante", "ciudad_restaurante",
@@ -30,7 +30,7 @@ for col in df.columns:
 X = df.drop(columns=[c for c in excluir if c in df.columns], errors="ignore")
 y = df[ETIQUETA].astype(str)
 
-# Usar variables numericas y categoricas de cardinalidad baja.
+# Variables seleccionadas
 num_cols = X.select_dtypes(include=np.number).columns.tolist()
 cat_cols = [c for c in X.select_dtypes(include=["object", "category", "bool"]).columns
              if X[c].nunique(dropna=True) <= 30]
@@ -49,10 +49,11 @@ X_proc = preprocesador.fit_transform(X)
 if hasattr(X_proc, "toarray"):
     X_proc = X_proc.toarray()
 
-# PCA: proyectar todos los registros a 2 dimensiones.
+# PCA
 pca = PCA(n_components=2, random_state=RANDOM_STATE)
 X_pca = pca.fit_transform(X_proc)
 
+# Genera un grafico
 def graficar(X_2d, y, titulo, archivo, varianza=None):
     plt.figure(figsize=(10, 7))
     for clase in sorted(y.unique()):
@@ -72,7 +73,7 @@ def graficar(X_2d, y, titulo, archivo, varianza=None):
 graficar(X_pca, y, "Historial de precios - PCA", "precios/historial_precios_pca.png",
           pca.explained_variance_ratio_)
 
-# t-SNE se calcula sobre una muestra para reducir tiempo y memoria.
+# t-SNE
 n = min(MAX_TSNE, len(X_proc))
 rng = np.random.default_rng(RANDOM_STATE)
 indices = rng.choice(len(X_proc), size=n, replace=False) if n < len(X_proc) else np.arange(n)

@@ -1,4 +1,4 @@
-"""Construcción de la red neuronal (misma arquitectura que la versión de un solo script)."""
+# Construye la red neuronal
 import sys
 from pathlib import Path
 import tensorflow as tf
@@ -10,6 +10,7 @@ if str(ROOT) not in sys.path:
 from configuracion import SEED
 
 
+# Construye el modelo
 def build_model(input_dim, output_dim, kind, cfg):
     tf.keras.utils.set_random_seed(SEED)
     regularizer = tf.keras.regularizers.l2(cfg["l2"])

@@ -7,6 +7,7 @@ import ResultadoPrediccion from "./ResultadoPrediccion";
 
 type Valores = Record<string, ValorCampo>;
 
+// Obtiene valores iniciales
 function valoresIniciales(esquema: Esquema): Valores {
   const valores: Valores = {};
   for (const seccion of esquema.secciones) {
@@ -17,6 +18,7 @@ function valoresIniciales(esquema: Esquema): Valores {
   return valores;
 }
 
+// Obtiene valores de ejemplo
 function valoresDeEjemplo(esquema: Esquema): Valores {
   const valores = valoresIniciales(esquema);
   for (const seccion of esquema.secciones) {
@@ -28,12 +30,14 @@ function valoresDeEjemplo(esquema: Esquema): Valores {
   return valores;
 }
 
+// Comprueba la visibilidad de un campo
 function esVisible(campo: CampoEsquema, valores: Valores): boolean {
   if (!campo.mostrar_si) return true;
   return valores[campo.mostrar_si.campo] === campo.mostrar_si.valor;
 }
 
-/** Lo escrito en pantalla -> JSON para el backend (los campos vacíos no se envían). */
+/** Datos del formulario. */
+// Prepara los datos del formulario
 function armarDatos(esquema: Esquema, valores: Valores): Record<string, unknown> {
   const datos: Record<string, unknown> = {};
   for (const seccion of esquema.secciones) {
@@ -48,7 +52,7 @@ function armarDatos(esquema: Esquema, valores: Valores): Record<string, unknown>
       if (texto === "") continue;
       if (campo.tipo === "numero" || campo.tipo === "entero") {
         const numero = Number(texto.replace(",", "."));
-        datos[campo.nombre] = Number.isNaN(numero) ? texto : numero; // si no es número, el backend explica el error
+        datos[campo.nombre] = Number.isNaN(numero) ? texto : numero; // convertir numero
       } else {
         datos[campo.nombre] = texto;
       }
@@ -57,6 +61,7 @@ function armarDatos(esquema: Esquema, valores: Valores): Record<string, unknown>
   return datos;
 }
 
+// Renderiza el formulario
 export default function FormularioRed({ esquema }: { esquema: Esquema }) {
   const [valores, setValores] = useState<Valores>(() => valoresIniciales(esquema));
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -66,6 +71,7 @@ export default function FormularioRed({ esquema }: { esquema: Esquema }) {
   const refFormulario = useRef<HTMLFormElement | null>(null);
   const refResultado = useRef<HTMLDivElement | null>(null);
 
+  // Actualiza un campo
   function cambiar(nombre: string, valor: ValorCampo) {
     setValores((previo) => ({ ...previo, [nombre]: valor }));
     if (errores[nombre]) {
@@ -77,6 +83,7 @@ export default function FormularioRed({ esquema }: { esquema: Esquema }) {
     }
   }
 
+  // Limpia el formulario
   function limpiar() {
     setValores(valoresIniciales(esquema));
     setErrores({});
@@ -84,6 +91,7 @@ export default function FormularioRed({ esquema }: { esquema: Esquema }) {
     setResultado(null);
   }
 
+  // Carga un ejemplo
   function cargarEjemplo() {
     setValores(valoresDeEjemplo(esquema));
     setErrores({});
@@ -91,6 +99,7 @@ export default function FormularioRed({ esquema }: { esquema: Esquema }) {
     setResultado(null);
   }
 
+  // Enfoca el primer error
   function enfocarPrimerError(campos: string[]) {
     window.setTimeout(() => {
       for (const nombre of campos) {
@@ -106,6 +115,7 @@ export default function FormularioRed({ esquema }: { esquema: Esquema }) {
     }, 0);
   }
 
+  // Envia el formulario
   async function enviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setCargando(true);

@@ -1,11 +1,11 @@
-"""Rutas y constantes del backend. Todas relativas a la raíz del proyecto."""
+# Configuracion del backend
 import sys
 from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parent
 RAIZ = BACKEND.parent
 
-# Permite importar `preprocesamiento.motor_preprocesamiento` y `configuracion` del proyecto.
+# Rutas del proyecto
 if str(RAIZ) not in sys.path:
     sys.path.insert(0, str(RAIZ))
 

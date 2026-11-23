@@ -1,8 +1,4 @@
-"""Carga única (al iniciar) de preprocesadores, codificadores, metadatos y modelos .keras.
-
-Los .joblib y los metadatos se cargan sin TensorFlow; el modelo .keras se carga aparte,
-así el backend puede servir los formularios aunque TensorFlow no esté disponible.
-"""
+# Carga modelos y artefactos
 from __future__ import annotations
 
 import json
@@ -21,16 +17,17 @@ log = logging.getLogger("backend.cargador")
 
 
 @dataclass
+# Agrupa los artefactos de una tarea
 class Artefactos:
     tarea: str
     preprocesador: object
     codificador: object
     metadata: dict
-    columnas: list                      # columnas_antes_de_codificar (orden del entrenamiento)
-    categorias: dict                    # columna -> [valores válidos]
-    indice_categorias: dict             # columna -> {clave_normalizada: valor_canónico}
-    medianas: dict                      # columna numérica -> mediana de train (imputación)
-    modelo: object = None               # modelo keras (se carga aparte)
+    columnas: list                      # columnas de entrada
+    categorias: dict                    # categorias
+    indice_categorias: dict             # indices
+    medianas: dict                      # medianas
+    modelo: object = None               # modelo
     error_modelo: str | None = None
     lock: threading.Lock = field(default_factory=threading.Lock)
 
@@ -39,8 +36,9 @@ _artefactos: dict[str, Artefactos] = {}
 _errores: dict[str, str] = {}
 
 
+# Extrae las categorias
 def _extraer_categorias(pre) -> dict:
-    """Categorías que aprendió el OneHotEncoder con train, por columna."""
+    # Devuelve categorias por columna
     try:
         _, _, columnas = next(t for t in pre.transformers_ if t[0] == "categorical")
         onehot = pre.named_transformers_["categorical"].named_steps["onehot"]
@@ -49,6 +47,7 @@ def _extraer_categorias(pre) -> dict:
     return {col: [str(c) for c in cats] for col, cats in zip(columnas, onehot.categories_)}
 
 
+# Extrae las medianas
 def _extraer_medianas(pre) -> dict:
     try:
         _, _, columnas = next(t for t in pre.transformers_ if t[0] == "numeric")
@@ -62,6 +61,7 @@ def _extraer_medianas(pre) -> dict:
     return medianas
 
 
+# Carga los artefactos de una tarea
 def cargar_artefactos(tarea: str) -> Artefactos:
     pre = joblib.load(ARTEFACTOS / f"preprocesador_{tarea}.joblib")
     cod = joblib.load(ARTEFACTOS / f"codificador_{tarea}.joblib")
@@ -80,10 +80,11 @@ def cargar_artefactos(tarea: str) -> Artefactos:
     )
 
 
+# Carga el modelo Keras
 def _cargar_keras(art: Artefactos) -> None:
     os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
     try:
-        import tensorflow as tf  # import diferido: es lento y puede no estar instalado
+        import tensorflow as tf  # importacion diferida
         art.modelo = tf.keras.models.load_model(MODELOS / f"modelo_{art.tarea}.keras", compile=False)
         art.error_modelo = None
     except Exception as exc:  # noqa: BLE001
@@ -92,6 +93,7 @@ def _cargar_keras(art: Artefactos) -> None:
         log.error("No se pudo cargar el modelo de %s: %s", art.tarea, art.error_modelo)
 
 
+# Carga todos los modelos
 def cargar_todo() -> None:
     for tarea in TAREAS:
         try:
@@ -105,12 +107,14 @@ def cargar_todo() -> None:
             log.error("No se pudieron cargar los artefactos de %s: %s", tarea, _errores[tarea])
 
 
+# Obtiene los artefactos de una tarea
 def obtener(tarea: str) -> Artefactos:
     if tarea not in _artefactos:
         raise RuntimeError(_errores.get(tarea, f"La red '{tarea}' no está cargada."))
     return _artefactos[tarea]
 
 
+# Devuelve el estado de carga
 def estado() -> dict:
     salida = {}
     for tarea in TAREAS:

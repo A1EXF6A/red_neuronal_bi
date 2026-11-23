@@ -1,4 +1,4 @@
-"""Bucle de experimentos: entrena cada configuración y elige la mejor por Macro-F1 de validación."""
+# Selecciona el mejor modelo
 import sys
 from pathlib import Path
 import tensorflow as tf
@@ -12,12 +12,9 @@ from model_builder import build_model
 from model_utils import predict_classes, class_weights, metrics
 
 
+# Entrena y selecciona configuraciones
 def entrenar_configuraciones(datos, task_name):
-    """Entrena todas las configuraciones de CONFIGS.
-
-    Devuelve: experiment_rows, best_model, best_config, best_macro_f1, best_epochs.
-    El mejor modelo conserva los pesos de su mejor época (restore_best_weights=True).
-    """
+    # Entrena las configuraciones disponibles
     task = datos["task"]
     X_train, X_val = datos["X_train"], datos["X_val"]
     y_train, y_val = datos["y_train"], datos["y_val"]

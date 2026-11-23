@@ -1,4 +1,4 @@
-"""Prepara y divide cronológicamente el dataset de precios."""
+# Prepara precios
 from motor_preprocesamiento import prepare_task
 
 if __name__ == "__main__":

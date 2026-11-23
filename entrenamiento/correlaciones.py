@@ -1,4 +1,4 @@
-"""Matrices de correlación. Se calculan SOLO con train (sin usar validación ni test)."""
+# Calculo de correlaciones
 import sys
 import warnings
 from pathlib import Path
@@ -13,6 +13,7 @@ from configuracion import correlations_dir
 from graficacion import graficar_correlacion_variables, graficar_correlacion_etiqueta
 
 
+# Limpia un nombre de columna
 def _limpiar_nombre(nombre):
     for prefijo in ("numeric__", "categorical__"):
         if nombre.startswith(prefijo):
@@ -20,25 +21,21 @@ def _limpiar_nombre(nombre):
     return nombre
 
 
+# Genera correlaciones
 def generar_correlaciones(datos, task_name):
-    """Genera 3 CSV (resultados/<tarea>/correlaciones/) y 2 gráficos (graficos/<tarea>/).
-
-    1. Pearson entre variables numéricas originales (antes de One-Hot)  -> CSV + heatmap.
-    2. Pearson entre todas las columnas que recibe la red (tras One-Hot) -> solo CSV.
-    3. Spearman de cada columna codificada con la etiqueta               -> CSV + barras (top 20).
-    """
+    # Genera archivos y graficos de correlaciones
     carpeta = correlations_dir(task_name)
     carpeta.mkdir(parents=True, exist_ok=True)
     y_train = datos["y_train"]
 
-    # 1) numéricas originales
+    # Numericas originales
     numericas = datos["X_train_df"].select_dtypes(include=["number"])
     with np.errstate(all="ignore"):
         corr_num = numericas.corr(method="pearson")
     ruta_num = carpeta / "correlacion_numericas.csv"
     corr_num.to_csv(ruta_num)
 
-    # 2) columnas codificadas (entrada real de la red)
+    # Columnas codificadas
     nombres = [_limpiar_nombre(n) for n in datos["feature_names"]]
     codificadas = pd.DataFrame(datos["X_train"], columns=nombres)
     with np.errstate(all="ignore"):
@@ -46,9 +43,9 @@ def generar_correlaciones(datos, task_name):
     ruta_cod = carpeta / "correlacion_codificadas.csv"
     corr_cod.to_csv(ruta_cod)
 
-    # 3) variable vs. etiqueta (la etiqueta codificada conserva el orden de las clases)
+    # Variables y etiqueta
     with np.errstate(all="ignore"), warnings.catch_warnings():
-        warnings.simplefilter("ignore")  # columnas constantes: correlación indefinida (NaN)
+        warnings.simplefilter("ignore")  # advertencias de correlacion
         corr_et = codificadas.corrwith(pd.Series(y_train), method="spearman")
     tabla_et = (
         corr_et.rename("spearman_con_etiqueta").rename_axis("variable").reset_index()

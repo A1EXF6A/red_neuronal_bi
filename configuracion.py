@@ -7,7 +7,7 @@ MODELS = ROOT / "modelos"
 ARTIFACTS = MODELS / "artefactos"
 RESULTS = ROOT / "resultados"
 PLOTS = ROOT / "graficos"
-WEIGHTS = MODELS / "pesos"                 # pesos del mejor modelo de cada red
+WEIGHTS = MODELS / "pesos"                 # pesos de modelos
 
 SEED = 42
 TRAIN_RATIO = 0.70
@@ -49,14 +49,13 @@ TASKS = {
     },
 }
 
-# Columnas que NUNCA deben entrar como característica (fuga de la etiqueta o de información
-# posterior al momento de predicción). El preprocesamiento las elimina por tarea.
+# Columnas excluidas
 COLUMNAS_PROHIBIDAS = {
     "pedidos": [
         "tiempo_entrega_minutos", "tiempo_entrega_orig", "calificacion_operativa",
         "estado_pedido", "estado_completado", "estado_es_incidencia",
         "hubo_demora", "etiqueta_hubo_demora", "etiqueta_nivel_demora",
-        "dow_sin", "dow_cos",  # duplicadas: add_date_features las recrea como dia_semana_sin/cos
+        "dow_sin", "dow_cos",  # columnas duplicadas
     ],
     "resenas": [
         "etiqueta_nivel_satisfaccion", "calificacion", "calificacion_orig",
@@ -66,29 +65,33 @@ COLUMNAS_PROHIBIDAS = {
     ],
     "precios": [
         "etiqueta_cambio_fuerte", "precio_nuevo", "monto_cambio", "porcentaje_cambio",
-        "pct_orig",  # porcentaje de cambio del dataset original (fuga directa)
+        "pct_orig",  # fuga de informacion
     ],
 }
 
 
 
+# Obtiene la carpeta de graficos
 def plots_dir(task_name):
-    """Carpeta de gráficos de una red: graficos/<tarea>/"""
+    # Ruta de graficos
     return PLOTS / task_name
 
 
+# Obtiene la carpeta de resultados
 def results_dir(task_name):
-    """Carpeta de resultados de una red: resultados/<tarea>/"""
+    # Ruta de resultados
     return RESULTS / task_name
 
 
+# Obtiene la carpeta de correlaciones
 def correlations_dir(task_name):
-    """Matrices de correlación de una red: resultados/<tarea>/correlaciones/"""
+    # Ruta de correlaciones
     return results_dir(task_name) / "correlaciones"
 
 
+# Obtiene la carpeta de pesos
 def weights_dir(task_name):
-    """Carpeta de pesos del mejor modelo de una red: modelos/pesos/<tarea>/"""
+    # Ruta de pesos
     return WEIGHTS / task_name
 
 

@@ -8,6 +8,7 @@ const TAREAS: Tarea[] = ["pedidos", "resenas", "precios"];
 
 type Esquemas = Partial<Record<Tarea, Esquema>>;
 
+// Renderiza la aplicacion
 export default function App() {
   const [activa, setActiva] = useState<Tarea>("pedidos");
   const [esquemas, setEsquemas] = useState<Esquemas>({});
@@ -40,6 +41,7 @@ export default function App() {
     void cargar();
   }, [cargar]);
 
+  // Gestiona el teclado de las pestanas
   function teclaEnPestanas(evento: KeyboardEvent<HTMLDivElement>) {
     const posicion = TAREAS.indexOf(activa);
     let nueva = posicion;

@@ -1,8 +1,4 @@
-"""Valores nuevos (que no estaban en el entrenamiento) deben poder predecirse.
-
-Verifica validador + ingeniería de variables + preprocesador .joblib (la entrada real de la red).
-No necesita TensorFlow ni FastAPI.   Uso:  python -m backend.pruebas.test_categorias_nuevas
-"""
+# Prueba categorias nuevas
 from __future__ import annotations
 
 import numpy as np
@@ -33,7 +29,7 @@ BASE = {
         "ciudad_restaurante": "Chicago", "tiene_historial": False,
     },
 }
-# Valores que NO existen en el entrenamiento (incluye ciudad nueva con y sin país).
+# Valores nuevos
 NUEVOS = {
     "pedidos": {"ciudad_cliente": "Quito", "pais_cliente": "Ecuador", "ciudad_restaurante": "Ambato",
                 "cocina_restaurante": "Ecuadorian", "segmento_cliente": "VIP Galáctico", "metodo_pago": "Cripto"},
@@ -44,6 +40,7 @@ NUEVOS = {
 }
 
 
+# Prueba una tarea
 def probar(tarea: str) -> None:
     art, esquema, ref = cargar_artefactos(tarea), cargar_esquema(tarea), referencias()
     datos = {**BASE[tarea], **NUEVOS[tarea]}
@@ -56,7 +53,7 @@ def probar(tarea: str) -> None:
     assert np.isfinite(X).all(), f"{tarea}: la entrada de la red contiene NaN/inf"
     print(f"OK {tarea}: {len(avisos)} avisos de categorías nuevas, entrada {X.shape}")
 
-    # Un valor conocido con otra capitalización/acentos NO debe generar aviso.
+    # Valor conocido
     valores2, _ = validar(esquema, {**BASE[tarea], "ciudad_restaurante": " chicago "}, art.indice_categorias)
     assert valores2["ciudad_restaurante"] == "Chicago"
 

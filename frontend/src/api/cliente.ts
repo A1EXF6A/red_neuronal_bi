@@ -2,6 +2,7 @@ import type { Esquema, ErrorCampo, Prediccion, Salud, Tarea } from "../tipos";
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
 
+// Representa errores de la API
 export class ErrorApi extends Error {
   errores: ErrorCampo[];
   constructor(mensaje: string, errores: ErrorCampo[] = []) {
@@ -11,10 +12,12 @@ export class ErrorApi extends Error {
   }
 }
 
+// Comprueba si un valor es una lista
 function esLista(valor: unknown): valor is ErrorCampo[] {
   return Array.isArray(valor);
 }
 
+// Realiza una solicitud
 async function pedir<T>(ruta: string, opciones?: RequestInit): Promise<T> {
   let respuesta: Response;
   try {
@@ -52,14 +55,17 @@ async function pedir<T>(ruta: string, opciones?: RequestInit): Promise<T> {
   return (await respuesta.json()) as T;
 }
 
+// Obtiene el esquema
 export function obtenerEsquema(tarea: Tarea): Promise<Esquema> {
   return pedir<Esquema>(`/api/esquemas/${tarea}`);
 }
 
+// Obtiene el estado del servicio
 export function obtenerSalud(): Promise<Salud> {
   return pedir<Salud>("/api/salud");
 }
 
+// Solicita una prediccion
 export function predecir(tarea: Tarea, datos: Record<string, unknown>): Promise<Prediccion> {
   return pedir<Prediccion>(`/api/predecir/${tarea}`, {
     method: "POST",

@@ -1,4 +1,4 @@
-"""Evaluación única en test del mejor modelo y reportes en CSV/JSON."""
+# Evalua el mejor modelo
 import sys
 from pathlib import Path
 import json
@@ -14,6 +14,7 @@ from configuracion import results_dir
 from model_utils import predict_classes, metrics
 
 
+# Evalua el conjunto de prueba
 def evaluar_test(datos, seleccion, task_name):
     task = datos["task"]
     label_encoder = datos["label_encoder"]
@@ -24,7 +25,7 @@ def evaluar_test(datos, seleccion, task_name):
     experiments = pd.DataFrame(seleccion["experiment_rows"]).sort_values("macro_f1", ascending=False)
     experiments.to_csv(carpeta / "experimentos.csv", index=False)
 
-    # Test se consulta una sola vez tras seleccionar la configuración.
+    # Evaluacion final
     test_predictions = predict_classes(seleccion["best_model"], datos["X_test"], task["kind"])
     test_metrics = metrics(y_test, test_predictions)
     class_ids = np.arange(len(label_encoder.classes_))

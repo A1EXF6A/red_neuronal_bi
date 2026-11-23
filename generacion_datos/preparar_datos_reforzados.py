@@ -1,14 +1,4 @@
-"""
-preparar_datos_v6.py  -  GlobalBite Delivery
-Genera versiones v6 de los tres datasets, pensadas para redes neuronales:
-  - Clases balanceadas (cortes por cuantiles).
-  - Variables derivadas nuevas (sin fuga de la etiqueta).
-  - Señal sintética reforzada y documentada (ver README_v6.md).
-  - Se eliminan columnas con fuga / identificadores / texto.
-  - Columna 'split' (train/val/test) estratificada, lista para usar.
-
-Uso:  python preparar_datos_v6.py [carpeta_entrada] [carpeta_salida]
-"""
+# Prepara los datos reforzados para las redes
 import sys, os, json
 import numpy as np
 import pandas as pd
@@ -21,12 +11,14 @@ rng = np.random.default_rng(SEED)
 info = {}
 
 
+# Lee un archivo CSV
 def leer(nombre):
     return pd.read_csv(os.path.join(IN, nombre), encoding="utf-8-sig")
 
 
+# Divide los datos
 def split_estratificado(y, grupos=None, seed=SEED):
-    """70/15/15 estratificado (o por grupos si se dan, para no mezclar un grupo entre splits)."""
+    # Divide los datos en train, validacion y test
     r = np.random.default_rng(seed)
     s = np.empty(len(y), dtype=object)
     if grupos is None:
@@ -47,50 +39,50 @@ def split_estratificado(y, grupos=None, seed=SEED):
     return s
 
 
+# Genera efectos por categoria
 def efecto(serie, sd):
-    """Efecto aleatorio fijo (reproducible) por categoría, media 0."""
+    # Genera un efecto reproducible por categoria
     cats = sorted(serie.dropna().unique())
     e = rng.normal(0, sd, len(cats))
     e -= e.mean()
     return serie.map(dict(zip(cats, e)))
 
 
+# Calcula cortes por cuantiles
 def cortes_cuantiles(x, k):
     qs = np.linspace(0, 1, k + 1)[1:-1]
     return [float(np.quantile(x, q)) for q in qs]
 
 
-# =====================================================================
-# 1. PEDIDOS
-# =====================================================================
+# PEDIDOS
 p = leer("pedidos_etiquetado.csv")
 p["fecha"] = pd.to_datetime(p["fecha"])
 p["dow"] = p["fecha"].dt.dayofweek
 p["tiempo_entrega_orig"] = p["tiempo_entrega_minutos"]
 
-# --- tiempo de entrega: parte sistemática original + factores observables + menos ruido
+# Tiempo de entrega
 base = 7.33 + 1.798 * p["distancia_km"] + 19.75 * p["multiplicador_hora_pico"]
 rating_ef = p["nivel_rating_restaurante"].map({"Alto": -1.5, "Medio": 0.0, "Bajo": 1.5}).fillna(0.0)
-mes_ef = 1.5 * np.cos((p["mes"] - 12) / 12 * 2 * np.pi)            # pico en diciembre
-dia_ef = p["dow"].map({4: 1.0, 5: 1.5, 6: 1.0}).fillna(0.0)          # vie/sáb/dom
+mes_ef = 1.5 * np.cos((p["mes"] - 12) / 12 * 2 * np.pi)            # efecto mensual
+dia_ef = p["dow"].map({4: 1.0, 5: 1.5, 6: 1.0}).fillna(0.0)          # efecto semanal
 t = (base
-     + efecto(p["ciudad_restaurante"], 2.0)       # congestión por ciudad
-     + efecto(p["cocina_restaurante"], 1.2)       # tiempo de preparación por cocina
-     + efecto(p["restaurante_id"].astype(str), 1.0)  # efecto propio del restaurante
+     + efecto(p["ciudad_restaurante"], 2.0)       # efecto de ciudad
+     + efecto(p["cocina_restaurante"], 1.2)       # efecto de cocina
+     + efecto(p["restaurante_id"].astype(str), 1.0)  # efecto de restaurante
      + rating_ef + mes_ef + dia_ef
-     + rng.normal(0, 2.2, len(p)))                # ruido (antes sd=5.6)
+     + rng.normal(0, 2.2, len(p)))                # ruido
 p["tiempo_entrega_minutos"] = np.clip(np.round(t), 12, None).astype(int)
 
-# --- etiqueta balanceada por cuantiles (0 rápida, 1 normal, 2 lenta, 3 muy lenta)
+# Etiqueta de demora
 cz = [int(round(c)) for c in cortes_cuantiles(p["tiempo_entrega_minutos"], 4)]
 p["etiqueta_nivel_demora"] = np.digitize(p["tiempo_entrega_minutos"], [c + 0.5 for c in cz])
 info["pedidos_cortes_minutos"] = cz
 
-# --- calificación operativa coherente con el nuevo tiempo
+# Calificacion
 p["calificacion_operativa"] = np.clip(
     np.round(4.9 - 0.045 * (p["tiempo_entrega_minutos"] - 25) + rng.normal(0, 0.2, len(p)), 2), 2.5, 5.0)
 
-# --- variables derivadas (todas disponibles al momento del pedido)
+# Variables derivadas
 p["tarifa_por_km"] = p["tarifa_entrega"] / p["distancia_km"]
 p["monto_por_km"] = p["monto_total"] / p["distancia_km"]
 p["log_distancia"] = np.log1p(p["distancia_km"])
@@ -104,13 +96,13 @@ p["mes_sin"] = np.sin(2 * np.pi * p["mes"] / 12)
 p["mes_cos"] = np.cos(2 * np.pi * p["mes"] / 12)
 p["antiguedad_cliente_dias"] = (p["fecha"] - pd.to_datetime(p["fecha_registro_cliente"])).dt.days.clip(lower=0)
 
-# historial del restaurante: media de tiempo de SUS pedidos anteriores (sin incluir el actual)
+# Historial del restaurante
 p = p.sort_values(["fecha", "pedido_id"]).reset_index(drop=True)
 g = p.groupby("restaurante_id")["tiempo_entrega_minutos"]
 cum = g.cumsum() - p["tiempo_entrega_minutos"]
 cnt = g.cumcount()
 glob = p["tiempo_entrega_minutos"].expanding().mean().shift(1).fillna(p["tiempo_entrega_minutos"].mean())
-k = 5  # suavizado hacia la media global
+k = 5  # suavizado
 p["hist_tiempo_restaurante"] = (cum + k * glob) / (cnt + k)
 p["hist_n_pedidos_restaurante"] = cnt
 cg = p.groupby("ciudad_restaurante")["tiempo_entrega_minutos"]
@@ -128,16 +120,14 @@ cols_modelo_p = [
     "costo_promedio_dos_personas", "tiene_delivery", "tiene_comer_en_local", "tiene_wifi", "acepta_tarjeta",
     "cliente_misma_ciudad", "cliente_mismo_pais", "antiguedad_cliente_dias",
     "hist_tiempo_restaurante", "hist_n_pedidos_restaurante", "hist_tiempo_ciudad",
-    # categóricas (one-hot en el script de entrenamiento)
+    # Categoricas
     "ciudad_restaurante", "cocina_restaurante", "nivel_rating_restaurante",
     "metodo_pago", "segmento_cliente", "pais_restaurante",
 ]
 p.to_csv(os.path.join(OUT, "pedidos_v6_completo.csv"), index=False, encoding="utf-8")
 p[cols_modelo_p].to_csv(os.path.join(OUT, "pedidos_v6.csv"), index=False, encoding="utf-8")
 
-# =====================================================================
-# 2. RESEÑAS  (hereda del pedido: tiempo, distancia, demora, calificación operativa)
-# =====================================================================
+# RESENAS
 r = leer("resenas_etiquetado.csv")
 r["fecha"] = pd.to_datetime(r["fecha"])
 ped = p[["pedido_id", "tiempo_entrega_minutos", "distancia_km", "multiplicador_hora_pico", "tarifa_entrega",
@@ -148,7 +138,7 @@ assert r["tiempo_entrega_minutos"].notna().all()
 
 r["calificacion_orig"] = r["calificacion"]
 rating_ef_r = r["nivel_rating_restaurante"].map({"Alto": 0.15, "Medio": 0.0, "Bajo": -0.15}).fillna(0.0)
-seg_ef = r["segmento_cliente"].map({"VIP": -0.10}).fillna(0.0)           # clientes VIP más exigentes
+seg_ef = r["segmento_cliente"].map({"VIP": -0.10}).fillna(0.0)           # efecto de segmento
 cal = (r["calificacion_operativa"] + rating_ef_r + seg_ef
        + efecto(r["cocina_restaurante"], 0.10)
        + rng.normal(0, 0.30, len(r)))
@@ -158,7 +148,7 @@ cr = [round(c, 1) for c in cortes_cuantiles(r["calificacion"], 4)]
 r["etiqueta_nivel_satisfaccion"] = np.digitize(r["calificacion"], [c + 0.05 for c in cr])
 info["resenas_cortes_calificacion"] = cr
 
-# comentario coherente con la nueva clase (texto = solo para análisis, NO usar como feature)
+# Comentario de la clase
 pool = {0: ["Poor experience, would not order again.", "Delivery was very delayed.", "Order arrived late and cold.",
             "Not satisfied, wrong items delivered."],
         1: ["Food was okay, delivery took a while.", "It was fine, some items were cold.",
@@ -190,26 +180,24 @@ cols_modelo_r = [
 r.to_csv(os.path.join(OUT, "resenas_v6_completo.csv"), index=False, encoding="utf-8")
 r[cols_modelo_r].to_csv(os.path.join(OUT, "resenas_v6.csv"), index=False, encoding="utf-8")
 
-# =====================================================================
-# 3. PRECIOS
-# =====================================================================
+# PRECIOS
 h = leer("historial_precios_etiquetado.csv")
 h["fecha"] = pd.to_datetime(h["fecha"])
 h = h.sort_values(["item_menu_id", "fecha"]).reset_index(drop=True)
 h["pct_orig"] = h["porcentaje_cambio"]
-h["n_cambio"] = h.groupby("item_menu_id").cumcount()          # 0 = primer cambio, 1 = segundo
+h["n_cambio"] = h.groupby("item_menu_id").cumcount()          # numero de cambio
 h["dias_desde_inicio"] = (h["fecha"] - h["fecha"].min()).dt.days
 h["dias_desde_anterior"] = h.groupby("item_menu_id")["fecha"].diff().dt.days
 
 cat_ef = efecto(h["categoria_item"], 1.2)
-city_ef = efecto(h["ciudad_restaurante"], 1.5)             # inflación local por ciudad
+city_ef = efecto(h["ciudad_restaurante"], 1.5)             # efecto de ciudad
 cuis_ef = efecto(h["cocina_item"], 0.8)
 season = 0.5 * np.cos((h["mes"] - 12) / 12 * 2 * np.pi)
 lp = np.log(h["precio_anterior"])
-precio_ef = -2.0 * (lp - lp.mean()) / lp.std()             # los items baratos suben más en %
+precio_ef = -2.0 * (lp - lp.mean()) / lp.std()             # efecto del precio
 noise = rng.normal(0, 2.0, len(h))
 
-# generación secuencial por ítem (el 2º cambio depende del 1º y parte de su precio nuevo)
+# Generacion secuencial
 pa = h["precio_anterior"].values.copy()
 pct = np.zeros(len(h))
 lag = np.full(len(h), np.nan)
@@ -219,7 +207,7 @@ mu = (9.0 + cat_ef + city_ef + cuis_ef + season + precio_ef).values
 pct[idx0] = mu[idx0] + noise[idx0]
 pct[idx0] = np.clip(pct[idx0], -2, 27)
 nuevo0 = np.round(pa[idx0] * (1 + pct[idx0] / 100), 2)
-pa[idx1] = nuevo0                                           # encadenar precios
+pa[idx1] = nuevo0                                           # actualizar precio
 lag[idx1] = pct[idx0]
 pct[idx1] = np.clip(mu[idx1] - 0.45 * (pct[idx0] - 10) + noise[idx1], -2, 27)
 nuevo = np.round(pa * (1 + pct / 100), 2)
@@ -240,7 +228,7 @@ h["log_precio_anterior"] = np.log(h["precio_anterior"])
 h["mes_sin"] = np.sin(2 * np.pi * h["mes"] / 12)
 h["mes_cos"] = np.cos(2 * np.pi * h["mes"] / 12)
 h["dias_desde_anterior"] = h["dias_desde_anterior"].fillna(h["dias_desde_anterior"].median())
-# inflación reciente de la ciudad: media de % de cambios PREVIOS en esa ciudad (sin el actual)
+# Inflacion de la ciudad
 h = h.sort_values(["fecha", "cambio_precio_key"]).reset_index(drop=True)
 gc = h.groupby("ciudad_restaurante")["porcentaje_cambio"]
 cs = gc.cumsum() - h["porcentaje_cambio"]
@@ -263,9 +251,7 @@ cols_modelo_h = [
 h.to_csv(os.path.join(OUT, "historial_precios_v6_completo.csv"), index=False, encoding="utf-8")
 h[cols_modelo_h].to_csv(os.path.join(OUT, "historial_precios_v6.csv"), index=False, encoding="utf-8")
 
-# =====================================================================
 # Resumen
-# =====================================================================
 for nombre, df, col in [("pedidos", p, "etiqueta_nivel_demora"),
                         ("resenas", r, "etiqueta_nivel_satisfaccion"),
                         ("precios", h, "etiqueta_cambio_fuerte")]:
@@ -276,9 +262,7 @@ with open(os.path.join(OUT, "resumen_v6.json"), "w", encoding="utf-8") as f:
     json.dump(info, f, indent=2, ensure_ascii=False)
 print(json.dumps(info, indent=2, ensure_ascii=False))
 
-# =====================================================================
-# 4. CSV finales "*_reforzado_etiquetado.csv" (todas las columnas, etiqueta al final)
-# =====================================================================
+# CSV finales
 _cfg = {"pedidos": (["hubo_demora"], "etiqueta_nivel_demora"),
         "resenas": ([], "etiqueta_nivel_satisfaccion"),
         "historial_precios": ([], "etiqueta_cambio_fuerte")}

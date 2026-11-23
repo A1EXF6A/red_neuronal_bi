@@ -6,10 +6,12 @@ interface Props {
   cargando: boolean;
 }
 
+// Formatea un porcentaje
 function porcentaje(p: number): string {
   return `${(p * 100).toLocaleString("es", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
 }
 
+// Muestra el resultado
 export default function ResultadoPrediccion({ esquema, resultado, cargando }: Props) {
   return (
     <div className="ticket-envoltura" aria-live="polite">

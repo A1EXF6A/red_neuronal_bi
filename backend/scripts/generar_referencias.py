@@ -1,13 +1,4 @@
-"""Genera backend/referencias/referencias.json a partir de los datos del proyecto.
-
-Contiene lo que el backend necesita y que no se puede deducir de un solo registro:
-  - ciudad -> país y código de país (cada ciudad pertenece a un solo país)
-  - fecha base y constantes de relleno de la red de precios
-  - rangos numéricos vistos en train (solo para avisar de extrapolación)
-  - significado de cada clase (cortes del README)
-
-Uso (desde la raíz):  python -m backend.scripts.generar_referencias
-"""
+# Genera referencias del proyecto
 import json
 
 import pandas as pd
@@ -34,13 +25,14 @@ CLASES = {
 }
 
 
+# Genera las referencias
 def main() -> None:
     pedidos = pd.read_csv(DATOS_ORIGINALES / "pedidos_reforzado_etiquetado.csv")
     resenas = pd.read_csv(DATOS_ORIGINALES / "resenas_reforzado_etiquetado.csv")
     precios = pd.read_csv(DATOS_ORIGINALES / "historial_precios_reforzado_etiquetado.csv",
                           parse_dates=["fecha"])
 
-    # ciudad -> país / código
+    # Mapa de ciudades
     partes = [
         pedidos[["ciudad_cliente", "pais_cliente", "codigo_pais_cliente"]]
         .set_axis(["ciudad", "pais", "codigo"], axis=1),
@@ -53,7 +45,7 @@ def main() -> None:
     mapa_ciudades = {
         r.ciudad: {"pais": r.pais, "codigo_pais": r.codigo} for r in ciudades.itertuples()
     }
-    # las otras tablas no deben traer ciudades fuera del mapa
+    # Validar ciudades
     for tabla, cols in [(resenas, ["ciudad_cliente", "ciudad_restaurante"]),
                         (precios, ["ciudad_restaurante"])]:
         for col in cols:

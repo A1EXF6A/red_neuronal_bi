@@ -1,11 +1,4 @@
-"""Exporta las matrices de pesos de cada capa oculta, SOLO del mejor modelo.
-
-El modelo tiene bloques Dense -> BatchNormalization -> Dropout. Para poder reproducir la
-predicción a mano se guardan, por cada capa oculta, W, b y los parámetros de BatchNorm
-(gamma, beta, media móvil, varianza móvil, epsilon). La capa de salida va aparte.
-
-Este módulo no importa TensorFlow: reconoce las capas por el nombre de su clase.
-"""
+# Exporta pesos del mejor modelo
 import sys
 from pathlib import Path
 import json
@@ -20,12 +13,14 @@ from configuracion import weights_dir
 from graficacion import graficar_pesos
 
 
+# Obtiene el nombre de una capa
 def _nombre_clase(capa):
     return capa.__class__.__name__
 
 
+# Extrae bloques del modelo
 def _extraer_bloques(model):
-    """Recorre las capas del modelo y devuelve (bloques_ocultos, bloque_salida)."""
+    # Obtiene pesos de las capas
     capas = list(model.layers)
     indices_dense = [i for i, c in enumerate(capas) if _nombre_clase(c) == "Dense"]
     if not indices_dense:
@@ -51,17 +46,20 @@ def _extraer_bloques(model):
     return ocultas, salida
 
 
+# Limpia una carpeta
 def _limpiar_carpeta(carpeta):
-    """Evita archivos huérfanos si el mejor modelo cambia de cantidad de capas."""
+    # Elimina archivos de capas antiguas
     for patron in ("capa_oculta_*", "capa_salida_*", "pesos_*"):
         for archivo in carpeta.glob(patron):
             archivo.unlink()
 
 
+# Genera nombres de neuronas
 def _nombres_neuronas(n, prefijo="n"):
     return [f"{prefijo}{j:02d}" for j in range(1, n + 1)]
 
 
+# Exporta los pesos
 def exportar_pesos(datos, seleccion, task_name):
     model = seleccion["best_model"]
     config = seleccion["best_config"]
@@ -114,7 +112,7 @@ def exportar_pesos(datos, seleccion, task_name):
             }
         json_ocultas.append(entrada_json)
 
-    # capa de salida (no es oculta; va en archivos separados)
+    # Capa de salida
     cols_salida = clases if salida["units"] == len(clases) else _nombres_neuronas(salida["units"], "salida")
     filas_salida = _nombres_neuronas(ocultas[-1]["units"] if ocultas else len(entradas), "capa_prev_n")
     pd.DataFrame(salida["W"], index=filas_salida, columns=cols_salida).rename_axis("entrada").to_csv(carpeta / "capa_salida_W.csv")

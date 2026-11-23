@@ -1,4 +1,4 @@
-"""GET /api/esquemas/{tarea}: definición del formulario + categorías aceptadas + info del modelo."""
+# Ruta de esquemas
 import copy
 
 from fastapi import APIRouter, HTTPException
@@ -11,6 +11,7 @@ from backend.servicios.validador import campos_planos
 router = APIRouter(prefix="/api", tags=["esquemas"])
 
 
+# Construye el esquema completo
 def esquema_completo(tarea: str) -> dict:
     esquema = copy.deepcopy(cargar_esquema(tarea))
     ref = referencias()
@@ -34,6 +35,7 @@ def esquema_completo(tarea: str) -> dict:
 
 
 @router.get("/esquemas/{tarea}")
+# Obtiene el esquema de una tarea
 def obtener_esquema(tarea: str):
     if tarea not in TAREAS:
         raise HTTPException(status_code=404, detail=f"Tarea desconocida: {tarea}")

@@ -1,4 +1,4 @@
-"""Ejecuta secuencialmente todo el flujo: preparación y después entrenamiento."""
+# Ejecuta el flujo completo
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +15,7 @@ COMMANDS = [
     [PYTHON, str(ROOT / "entrenamiento" / "entrenar_precios.py")],
 ]
 
+# Ejecuta todas las tareas
 def main():
     for number, command in enumerate(COMMANDS, start=1):
         print("\\n" + "=" * 80, flush=True)

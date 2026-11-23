@@ -1,10 +1,4 @@
-"""Validación de los datos escritos en el formulario.
-
-No depende de FastAPI ni de TensorFlow. Convierte texto/números/fechas al tipo correcto,
-comprueba límites duros (valores imposibles) y reconoce las categorías vistas en el
-entrenamiento ignorando mayúsculas, espacios y acentos. Las categorías NUEVAS se aceptan
-(no se rechazan): ver `avisos_categorias_nuevas`.
-"""
+# Valida los datos del formulario
 from __future__ import annotations
 
 import math
@@ -16,35 +10,42 @@ from datetime import date
 LARGO_MAXIMO_TEXTO = 100
 
 
+# Representa errores de validacion
 class ErrorValidacion(Exception):
+    # Inicializa el error
     def __init__(self, errores: list[dict]):
         super().__init__("Datos inválidos")
         self.errores = errores
 
 
-# ---------------------------------------------------------------- utilidades de texto
+# Utilidades de texto
+# Quita acentos del texto
 def _sin_acentos(texto: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFKD", texto) if not unicodedata.combining(c))
 
 
+# Normaliza una clave de texto
 def clave_texto(texto) -> str:
-    """'  São  paulo ' -> 'sao paulo'."""
+    # Normaliza texto
     return re.sub(r"\s+", " ", _sin_acentos(str(texto)).strip()).casefold()
 
 
+# Obtiene los campos del esquema
 def campos_planos(esquema: dict) -> list[dict]:
     return [campo for seccion in esquema["secciones"] for campo in seccion["campos"]]
 
 
+# Comprueba si un valor esta vacio
 def _vacio(valor) -> bool:
     return valor is None or (isinstance(valor, str) and valor.strip() == "")
 
 
-# ---------------------------------------------------------------- conversión por tipo
+# Conversion por tipo
 _VERDADERO = {"true", "1", "si", "sí", "s", "yes", "y", "verdadero"}
 _FALSO = {"false", "0", "no", "n", "falso"}
 
 
+# Convierte un valor a numero
 def _a_numero(valor) -> float:
     if isinstance(valor, bool):
         raise ValueError("Debe ser un número")
@@ -61,6 +62,7 @@ def _a_numero(valor) -> float:
     return numero
 
 
+# Convierte un valor a booleano
 def _a_booleano(valor) -> bool:
     if isinstance(valor, bool):
         return valor
@@ -72,6 +74,7 @@ def _a_booleano(valor) -> bool:
     raise ValueError("Debe ser Sí o No")
 
 
+# Convierte un valor a fecha
 def _a_fecha(valor) -> date:
     texto = str(valor).strip()[:10]
     try:
@@ -80,6 +83,7 @@ def _a_fecha(valor) -> date:
         raise ValueError("Fecha inválida; usa el formato AAAA-MM-DD")
 
 
+# Convierte un campo
 def _convertir(campo: dict, bruto, indice_categorias: dict):
     tipo = campo["tipo"]
     if tipo == "booleano":
@@ -103,20 +107,19 @@ def _convertir(campo: dict, bruto, indice_categorias: dict):
         if len(texto) > LARGO_MAXIMO_TEXTO:
             raise ValueError(f"Máximo {LARGO_MAXIMO_TEXTO} caracteres")
         indice = indice_categorias.get(campo["nombre"], {})
-        # Conocido en el entrenamiento -> nombre canónico (ignora mayúsculas/acentos/espacios).
-        # Nuevo -> se acepta tal cual; el OneHotEncoder (handle_unknown="ignore") lo codifica
-        # con ceros y el modelo predice con el resto de variables.
+        # Normalizar categoria
         return indice.get(clave_texto(texto), texto)
     raise ValueError(f"Tipo de campo desconocido: {tipo}")
 
 
-# ---------------------------------------------------------------- validación completa
+# Validacion completa
+# Valida los datos recibidos
 def validar(esquema: dict, datos: dict, indice_categorias: dict) -> tuple[dict, list[dict]]:
-    """Devuelve (valores, errores). `valores[nombre]` es None si el campo quedó vacío u oculto."""
+    # Devuelve valores y errores
     campos = campos_planos(esquema)
     analizados: dict[str, tuple] = {}
 
-    # 1) Convierte todos los campos (la visibilidad se decide después).
+    # Convertir campos
     for campo in campos:
         nombre = campo["nombre"]
         bruto = datos.get(nombre)
@@ -131,7 +134,7 @@ def validar(esquema: dict, datos: dict, indice_categorias: dict) -> tuple[dict, 
         except ValueError as exc:
             analizados[nombre] = (None, str(exc))
 
-    # 2) Aplica visibilidad (mostrar_si) y obligatoriedad.
+    # Aplicar reglas
     valores: dict = {}
     errores: list[dict] = []
     for campo in campos:
@@ -139,7 +142,7 @@ def validar(esquema: dict, datos: dict, indice_categorias: dict) -> tuple[dict, 
         valor, error = analizados[nombre]
         condicion = campo.get("mostrar_si")
         if condicion and analizados.get(condicion["campo"], (None, None))[0] != condicion["valor"]:
-            valores[nombre] = None  # campo oculto: se ignora
+            valores[nombre] = None  # campo oculto
             continue
         if error:
             errores.append({"campo": nombre, "mensaje": error})
@@ -151,9 +154,10 @@ def validar(esquema: dict, datos: dict, indice_categorias: dict) -> tuple[dict, 
     return valores, errores
 
 
-# ---------------------------------------------------------------- avisos (no bloquean)
+# Avisos
+# Genera avisos de rango
 def avisos_de_rango(esquema: dict, valores: dict, rangos: dict, rango_fechas: list | None) -> list[str]:
-    """Advierte cuando un valor queda fuera de lo visto en entrenamiento (extrapolación)."""
+    # Advierte sobre valores nuevos
     avisos: list[str] = []
     for campo in campos_planos(esquema):
         valor = valores.get(campo["nombre"])
@@ -178,14 +182,16 @@ def avisos_de_rango(esquema: dict, valores: dict, rangos: dict, rango_fechas: li
     return avisos
 
 
+# Comprueba si una categoria es nueva
 def es_categoria_nueva(campo_nombre: str, valor, indice_categorias: dict) -> bool:
-    """True si el texto no coincide con ninguna categoría vista en el entrenamiento."""
+    # Indica si una categoria es nueva
     conocidas = set(indice_categorias.get(campo_nombre, {}).values())
     return valor is not None and valor not in conocidas
 
 
+# Genera avisos de categorias nuevas
 def avisos_categorias_nuevas(esquema: dict, valores: dict, indice_categorias: dict) -> list[str]:
-    """Advierte (sin bloquear) de textos que el modelo no vio al entrenar."""
+    # Genera avisos para categorias nuevas
     avisos: list[str] = []
     for campo in campos_planos(esquema):
         if campo["tipo"] != "texto":

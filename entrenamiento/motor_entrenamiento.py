@@ -1,8 +1,4 @@
-"""Fachada de compatibilidad: mantiene `from motor_entrenamiento import train_task`.
-
-La lógica real está repartida en: data_loader, correlaciones, model_builder, model_selector,
-model_utils, report_best, graficacion, exportar_pesos, model_exporter y experimento.
-"""
+# Compatibilidad para el entrenamiento
 import sys
 from pathlib import Path
 

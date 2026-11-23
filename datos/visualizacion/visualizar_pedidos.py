@@ -1,5 +1,5 @@
-# Visualizacion de clases: Pedidos
-# Instalar dependencias: pip install pandas numpy scikit-learn matplotlib
+# Visualizacion de pedidos
+# Dependencias
 
 import pandas as pd
 import numpy as np
@@ -16,7 +16,7 @@ RANDOM_STATE = 42
 
 df = pd.read_csv(ARCHIVO)
 
-# Excluir etiqueta, identificadores, fechas, datos personales y texto descriptivo.
+# Variables excluidas
 excluir_exactas = {
     ETIQUETA, "fecha", "nombre_dia", "nombre_mes", "anio_mes",
     "alias_cliente", "hash_cliente", "fecha_registro_cliente",
@@ -32,7 +32,7 @@ for col in df.columns:
 X = df.drop(columns=[c for c in excluir if c in df.columns], errors="ignore")
 y = df[ETIQUETA].astype(str)
 
-# Conservar numericas y categoricas de cardinalidad baja.
+# Variables seleccionadas
 num_cols = X.select_dtypes(include=np.number).columns.tolist()
 cat_cols = [c for c in X.select_dtypes(include=["object", "category", "bool"]).columns
              if X[c].nunique(dropna=True) <= 30]
@@ -54,6 +54,7 @@ if hasattr(X_proc, "toarray"):
 pca = PCA(n_components=2, random_state=RANDOM_STATE)
 X_pca = pca.fit_transform(X_proc)
 
+# Genera un grafico
 def graficar(X_2d, y, titulo, archivo, varianza=None):
     plt.figure(figsize=(10, 7))
     for clase in sorted(y.unique()):
@@ -71,7 +72,7 @@ def graficar(X_2d, y, titulo, archivo, varianza=None):
 
 graficar(X_pca, y, "Pedidos - PCA", "pedidos/pedidos_pca.png", pca.explained_variance_ratio_)
 
-# t-SNE se aplica a una muestra aleatoria para acelerar el procesamiento.
+# t-SNE
 n = min(MAX_TSNE, len(X_proc))
 rng = np.random.default_rng(RANDOM_STATE)
 indices = rng.choice(len(X_proc), size=n, replace=False) if n < len(X_proc) else np.arange(n)

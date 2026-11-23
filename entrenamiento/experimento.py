@@ -1,4 +1,4 @@
-"""Orquestador del entrenamiento de una red: encadena las etapas en el orden correcto."""
+# Coordina el entrenamiento
 import sys
 from pathlib import Path
 
@@ -16,22 +16,23 @@ from exportar_pesos import exportar_pesos
 from model_exporter import exportar_todo
 
 
+# Ejecuta el entrenamiento
 def train_task(task_name):
     if task_name not in TASKS:
         raise ValueError(f"Tarea desconocida: {task_name}. Opciones: {list(TASKS)}")
 
-    datos = cargar_datos(task_name)                         # data_loader
+    datos = cargar_datos(task_name)                         # cargar datos
     print("\n" + "=" * 78)
     print(f"ENTRENAMIENTO: {task_name.upper()}")
     print(f"Dimensión de entrada tras codificación: {datos['X_train'].shape[1]}")
     print(f"Train={len(datos['y_train']):,} | Validación={len(datos['y_val']):,} | Test={len(datos['y_test']):,}")
     print(f"Clases: {datos['label_encoder'].classes_.tolist()}")
 
-    correlaciones = generar_correlaciones(datos, task_name)  # solo lee train
-    seleccion = entrenar_configuraciones(datos, task_name)   # model_selector
-    evaluacion = evaluar_test(datos, seleccion, task_name)   # report_best (test, una sola vez)
-    graficos = guardar_graficos(datos, seleccion, evaluacion, task_name)  # graficacion
-    pesos = exportar_pesos(datos, seleccion, task_name)      # solo el mejor modelo
+    correlaciones = generar_correlaciones(datos, task_name)  # correlaciones
+    seleccion = entrenar_configuraciones(datos, task_name)   # entrenamiento
+    evaluacion = evaluar_test(datos, seleccion, task_name)   # evaluacion
+    graficos = guardar_graficos(datos, seleccion, evaluacion, task_name)  # graficos
+    pesos = exportar_pesos(datos, seleccion, task_name)      # pesos
 
     return exportar_todo(
         datos, seleccion, evaluacion, task_name,
