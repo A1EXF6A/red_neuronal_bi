@@ -88,8 +88,17 @@
           "nombre": "pais_cliente",
           "etiqueta": "País del cliente",
           "tipo": "texto",
-          "requerido": false,
-          "ayuda": "Opcional. Indícalo solo si la ciudad no está en la lista."
+          "requerido": false
+        },
+        {
+          "nombre": "misma_ubicacion",
+          "etiqueta": "¿Restaurante en la misma ciudad y país?",
+          "tipo": "booleano",
+          "requerido": true,
+          "ejemplo": true,
+          "defecto": true,
+          "ayuda": "El restaurante usa la misma ciudad y país del cliente.",
+          "oculto": true
         },
         {
           "nombre": "segmento_cliente",
@@ -104,21 +113,22 @@
       "id": "restaurante",
       "titulo": "El restaurante",
       "campos": [
-        {
-          "nombre": "ciudad_restaurante",
-          "etiqueta": "Ciudad del restaurante",
-          "tipo": "texto",
-          "requerido": true,
-          "ejemplo": "Chennai",
-          "ayuda": "Elige una de la lista o escribe otra."
-        },
-        {
-          "nombre": "pais_restaurante",
-          "etiqueta": "País del restaurante",
-          "tipo": "texto",
-          "requerido": false,
-          "ayuda": "Opcional. Indícalo solo si la ciudad no está en la lista."
-        },
+{
+        "nombre": "ciudad_restaurante",
+        "etiqueta": "Ciudad del restaurante",
+        "tipo": "texto",
+        "requerido": true,
+        "ejemplo": "Chennai",
+        "ayuda": "Elige una de la lista o escribe otra.",
+        "mostrar_si": { "campo": "misma_ubicacion", "valor": false }
+      },
+      {
+        "nombre": "pais_restaurante",
+        "etiqueta": "País del restaurante",
+        "tipo": "texto",
+        "requerido": false,
+        "mostrar_si": { "campo": "misma_ubicacion", "valor": false }
+      },
         {
           "nombre": "cocina_restaurante",
           "etiqueta": "Tipo de cocina",
@@ -131,7 +141,7 @@
     {
       "id": "historial",
       "titulo": "Historial",
-      "descripcion": "Dato de pedidos anteriores del restaurante. Opcional: si no lo tienes, déjalo vacío.",
+      "descripcion": "Dato de pedidos anteriores del restaurante.",
       "campos": [
         {
           "nombre": "hist_tiempo_restaurante",

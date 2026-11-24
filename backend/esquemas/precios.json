@@ -79,8 +79,7 @@
           "nombre": "pais_restaurante",
           "etiqueta": "País del restaurante",
           "tipo": "texto",
-          "requerido": false,
-          "ayuda": "Opcional. Indícalo solo si la ciudad no está en la lista."
+          "requerido": false
         }
       ]
     },
@@ -135,7 +134,7 @@
     {
       "id": "mercado",
       "titulo": "Contexto de mercado",
-      "descripcion": "Variación reciente de precios en el mercado. Opcional: si no la conoces, déjala vacía.",
+      "descripcion": "Variación reciente de precios en el mercado.",
       "campos": [
         {
           "nombre": "hist_pct_ciudad",

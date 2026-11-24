@@ -160,7 +160,14 @@ def fila_resenas(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
     f = v["fecha"]
     avisos = []
     pais_c, _, _ = _pais(ref, v["ciudad_cliente"], v.get("pais_cliente"), avisos)
-    pais_r, _, _ = _pais(ref, v["ciudad_restaurante"], v.get("pais_restaurante"), avisos)
+    misma_ubicacion = bool(v.get("misma_ubicacion", True))
+    if misma_ubicacion:
+        ciudad_r = v["ciudad_cliente"]
+        pais_r_indicado = v.get("pais_cliente")
+    else:
+        ciudad_r = v["ciudad_restaurante"]
+        pais_r_indicado = v.get("pais_restaurante")
+    pais_r, _, _ = _pais(ref, ciudad_r, pais_r_indicado, avisos)
     tiempo = v["tiempo_entrega_minutos"]
     dist, mult = v["distancia_km"], v["multiplicador_hora_pico"]
     previas = []
@@ -176,7 +183,7 @@ def fila_resenas(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
         "ciudad_cliente": v["ciudad_cliente"], "pais_cliente": pais_c,
         "segmento_cliente": v["segmento_cliente"],
         "cocina_restaurante": v["cocina_restaurante"],
-        "ciudad_restaurante": v["ciudad_restaurante"], "pais_restaurante": pais_r,
+        "ciudad_restaurante": ciudad_r, "pais_restaurante": pais_r,
         "tiempo_entrega_minutos": tiempo,
         "distancia_km": dist, "multiplicador_hora_pico": mult,
         "tarifa_entrega": v["tarifa_entrega"], "monto_total": v["monto_total"],

@@ -100,7 +100,6 @@ export default function Campo({ campo, valor, error, onCambio }: Props) {
     <div className={`campo${error ? " con-error" : ""}`} data-campo={campo.nombre}>
       <label htmlFor={id} className="etiqueta">
         {campo.etiqueta}
-        {!campo.requerido && <span className="opcional"> (opcional)</span>}
       </label>
       <div className="entrada">
         <input

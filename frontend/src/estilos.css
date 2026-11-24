@@ -202,11 +202,6 @@ input {
   font-weight: 600;
 }
 
-.opcional {
-  font-weight: 400;
-  color: var(--tinta-suave);
-}
-
 .entrada {
   position: relative;
 }

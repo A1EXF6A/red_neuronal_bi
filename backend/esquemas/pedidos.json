@@ -85,8 +85,7 @@
           "nombre": "pais_cliente",
           "etiqueta": "País del cliente",
           "tipo": "texto",
-          "requerido": false,
-          "ayuda": "Opcional. Indícalo solo si la ciudad no está en la lista."
+          "requerido": false
         },
         {
           "nombre": "segmento_cliente",
@@ -150,7 +149,6 @@
           "etiqueta": "País del restaurante",
           "tipo": "texto",
           "requerido": false,
-          "ayuda": "Opcional. Indícalo solo si la ciudad no está en la lista.",
           "mostrar_si": { "campo": "misma_ubicacion", "valor": false }
         },
         {
@@ -228,7 +226,7 @@
     {
       "id": "historial",
       "titulo": "Historial",
-      "descripcion": "Datos de pedidos anteriores. Opcional: si no los tienes, déjalos vacíos.",
+      "descripcion": "Datos de pedidos anteriores.",
       "campos": [
         {
           "nombre": "hist_tiempo_promedio",

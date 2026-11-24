@@ -69,6 +69,7 @@ def _formulario(tarea: str, f: pd.Series) -> dict:
             "ciudad_cliente": f["ciudad_cliente"], "segmento_cliente": f["segmento_cliente"],
             "ciudad_restaurante": f["ciudad_restaurante"], "cocina_restaurante": f["cocina_restaurante"],
             "hist_tiempo_restaurante": f["hist_tiempo_restaurante"],
+            "misma_ubicacion": _bool(f["ciudad_cliente"] == f["ciudad_restaurante"]),
         }
     tiene_hist = int(f["n_cambio"]) > 0
     datos = {
