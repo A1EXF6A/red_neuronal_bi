@@ -8,9 +8,9 @@ Esta versión reorganiza el proyecto V3 en dos etapas independientes: preparaci�
 proyecto/
 ├── datos/
 │   ├── originales/
-│   │   ├── pedidos_reforzado_etiquetado.csv
-│   │   ├── resenas_reforzado_etiquetado.csv
-│   │   └── historial_precios_reforzado_etiquetado.csv
+│   │   ├── pedidos.csv
+│   │   ├── resenas.csv
+│   │   └── historial_precios.csv
 │   └── procesados/
 │       ├── pedidos/    (particiones.joblib, resumen_preparacion.json, datos_procesados.csv)
 │       ├── resenas/

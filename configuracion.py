@@ -30,19 +30,19 @@ CONFIGS = [
 
 TASKS = {
     "pedidos": {
-        "file": "pedidos_reforzado_etiquetado.csv",
+        "file": "pedidos.csv",
         "target": "etiqueta_nivel_demora",
         "kind": "multiclass",
         "momento_prediccion": "Al recibir el pedido, antes de conocer la entrega real.",
     },
     "resenas": {
-        "file": "resenas_reforzado_etiquetado.csv",
+        "file": "resenas.csv",
         "target": "etiqueta_nivel_satisfaccion",
         "kind": "multiclass",
         "momento_prediccion": "Después de la entrega y antes de recibir calificación/comentario.",
     },
     "precios": {
-        "file": "historial_precios_reforzado_etiquetado.csv",
+        "file": "historial_precios.csv",
         "target": "etiqueta_cambio_fuerte",
         "kind": "binary",
         "momento_prediccion": "Antes de aplicar el nuevo precio.",
