@@ -12,11 +12,11 @@ BASE = {
     "pedidos": {
         "fecha": "2026-08-20", "monto_total": 84.6, "tarifa_entrega": 9.5, "distancia_km": 10.9,
         "multiplicador_hora_pico": 1.25, "metodo_pago": "Wallet", "ciudad_cliente": "Chicago",
-        "segmento_cliente": "Recurrente", "metodo_pago_preferido_cliente": "Wallet",
+        "segmento_cliente": "Recurrente",
         "fecha_registro_cliente": "2025-01-10", "cliente_activo": True, "ciudad_restaurante": "Chicago",
         "cocina_restaurante": "Italian", "nivel_rating_restaurante": "Alto",
         "costo_promedio_dos_personas": 40, "tiene_delivery": True, "tiene_comer_en_local": True,
-        "tiene_wifi": True, "acepta_tarjeta": True, "restaurante_activo": True,
+        "tiene_wifi": True, "acepta_tarjeta": True, "restaurante_activo": True, "misma_ubicacion": True,
     },
     "resenas": {
         "fecha": "2026-08-20", "tiempo_entrega_minutos": 45, "distancia_km": 8, "multiplicador_hora_pico": 1.0,
@@ -32,7 +32,8 @@ BASE = {
 # Valores nuevos
 NUEVOS = {
     "pedidos": {"ciudad_cliente": "Quito", "pais_cliente": "Ecuador", "ciudad_restaurante": "Ambato",
-                "cocina_restaurante": "Ecuadorian", "segmento_cliente": "VIP Galáctico", "metodo_pago": "Cripto"},
+                "cocina_restaurante": "Ecuadorian", "segmento_cliente": "VIP Galáctico", "metodo_pago": "Cripto",
+                "misma_ubicacion": False},
     "resenas": {"ciudad_cliente": "Quito", "ciudad_restaurante": "Ambato", "cocina_restaurante": "Ecuadorian",
                 "segmento_cliente": "Nuevo-Plus"},
     "precios": {"ciudad_restaurante": "Píllaro", "pais_restaurante": "Ecuador", "cocina_item": "Andean",
@@ -54,7 +55,7 @@ def probar(tarea: str) -> None:
     print(f"OK {tarea}: {len(avisos)} avisos de categorías nuevas, entrada {X.shape}")
 
     # Valor conocido
-    valores2, _ = validar(esquema, {**BASE[tarea], "ciudad_restaurante": " chicago "}, art.indice_categorias)
+    valores2, _ = validar(esquema, {**BASE[tarea], "ciudad_restaurante": " chicago ", "misma_ubicacion": False}, art.indice_categorias)
     assert valores2["ciudad_restaurante"] == "Chicago"
 
 

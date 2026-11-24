@@ -159,7 +159,7 @@ export default function FormularioRed({ esquema }: { esquema: Esquema }) {
         </header>
 
         {esquema.secciones.map((seccion) => {
-          const campos = seccion.campos.filter((c) => esVisible(c, valores));
+          const campos = seccion.campos.filter((c) => esVisible(c, valores) && !c.oculto);
           return (
             <section className="seccion" key={seccion.id} aria-labelledby={`${esquema.tarea}-${seccion.id}`}>
               <h3 id={`${esquema.tarea}-${seccion.id}`}>{seccion.titulo}</h3>

@@ -47,17 +47,19 @@
           "paso": 0.1,
           "unidad": "km"
         },
-        {
-          "nombre": "multiplicador_hora_pico",
-          "etiqueta": "Multiplicador de hora pico",
-          "tipo": "numero",
-          "requerido": true,
-          "ejemplo": 1.25,
-          "min": 0.5,
-          "max": 5,
-          "paso": 0.05,
-          "ayuda": "Usa 1.0 en horario normal; 1.25 o 1.5 en hora pico."
-        },
+      {
+        "nombre": "multiplicador_hora_pico",
+        "etiqueta": "Multiplicador de hora pico",
+        "tipo": "numero",
+        "requerido": true,
+        "ejemplo": 1.25,
+        "defecto": 1.25,
+        "oculto": true,
+        "min": 0.5,
+        "max": 5,
+        "paso": 0.05,
+        "ayuda": "Usa 1.0 en horario normal; 1.25 o 1.5 en hora pico."
+      },
         {
           "nombre": "metodo_pago",
           "etiqueta": "Método de pago",
@@ -97,8 +99,9 @@
           "nombre": "metodo_pago_preferido_cliente",
           "etiqueta": "Método de pago preferido",
           "tipo": "texto",
-          "requerido": true,
-          "ejemplo": "DebitCard"
+          "requerido": false,
+          "ejemplo": "DebitCard",
+          "oculto": true
         },
         {
           "nombre": "fecha_registro_cliente",
@@ -108,14 +111,25 @@
           "ejemplo": "2025-11-03",
           "ayuda": "Sirve para calcular la antigüedad del cliente."
         },
-        {
-          "nombre": "cliente_activo",
-          "etiqueta": "Cliente activo",
-          "tipo": "booleano",
-          "requerido": true,
-          "ejemplo": true,
-          "defecto": true
-        }
+      {
+        "nombre": "cliente_activo",
+        "etiqueta": "Cliente activo",
+        "tipo": "booleano",
+        "requerido": true,
+        "ejemplo": true,
+        "defecto": true,
+        "oculto": true
+      },
+      {
+        "nombre": "misma_ubicacion",
+        "etiqueta": "¿Restaurante en la misma ciudad y país?",
+        "tipo": "booleano",
+        "requerido": true,
+        "ejemplo": true,
+        "defecto": true,
+        "ayuda": "El restaurante usa la misma ciudad y país del cliente.",
+        "oculto": true
+      }
       ]
     },
     {
@@ -128,14 +142,16 @@
           "tipo": "texto",
           "requerido": true,
           "ejemplo": "Chicago",
-          "ayuda": "Elige una de la lista o escribe otra."
+          "ayuda": "Elige una de la lista o escribe otra.",
+          "mostrar_si": { "campo": "misma_ubicacion", "valor": false }
         },
         {
           "nombre": "pais_restaurante",
           "etiqueta": "País del restaurante",
           "tipo": "texto",
           "requerido": false,
-          "ayuda": "Opcional. Indícalo solo si la ciudad no está en la lista."
+          "ayuda": "Opcional. Indícalo solo si la ciudad no está en la lista.",
+          "mostrar_si": { "campo": "misma_ubicacion", "valor": false }
         },
         {
           "nombre": "cocina_restaurante",
@@ -157,6 +173,7 @@
           "tipo": "numero",
           "requerido": true,
           "ejemplo": 92,
+          "defecto": 92,
           "min": 0,
           "max": 10000,
           "paso": 1
@@ -167,7 +184,8 @@
           "tipo": "booleano",
           "requerido": true,
           "ejemplo": true,
-          "defecto": true
+          "defecto": true,
+          "oculto": true
         },
         {
           "nombre": "tiene_comer_en_local",
@@ -175,7 +193,8 @@
           "tipo": "booleano",
           "requerido": true,
           "ejemplo": true,
-          "defecto": true
+          "defecto": true,
+          "oculto": true
         },
         {
           "nombre": "tiene_wifi",
@@ -183,7 +202,8 @@
           "tipo": "booleano",
           "requerido": true,
           "ejemplo": true,
-          "defecto": true
+          "defecto": true,
+          "oculto": true
         },
         {
           "nombre": "acepta_tarjeta",
@@ -191,7 +211,8 @@
           "tipo": "booleano",
           "requerido": true,
           "ejemplo": true,
-          "defecto": true
+          "defecto": true,
+          "oculto": true
         },
         {
           "nombre": "restaurante_activo",
@@ -199,7 +220,8 @@
           "tipo": "booleano",
           "requerido": true,
           "ejemplo": true,
-          "defecto": true
+          "defecto": true,
+          "oculto": true
         }
       ]
     },
@@ -209,15 +231,16 @@
       "descripcion": "Datos de pedidos anteriores. Opcional: si no los tienes, déjalos vacíos.",
       "campos": [
         {
-          "nombre": "hist_tiempo_restaurante",
-          "etiqueta": "Tiempo promedio del restaurante",
+          "nombre": "hist_tiempo_promedio",
+          "etiqueta": "Tiempo promedio de entrega",
           "tipo": "numero",
           "requerido": false,
           "ejemplo": 51.5,
           "min": 0,
           "max": 1000,
           "paso": 0.1,
-          "unidad": "min"
+          "unidad": "min",
+          "ayuda": "Tiempo promedio de entrega del restaurante y de la ciudad."
         },
         {
           "nombre": "hist_n_pedidos_restaurante",
@@ -228,17 +251,6 @@
           "min": 0,
           "max": 1000000,
           "paso": 1
-        },
-        {
-          "nombre": "hist_tiempo_ciudad",
-          "etiqueta": "Tiempo promedio de la ciudad",
-          "tipo": "numero",
-          "requerido": false,
-          "ejemplo": 52.0,
-          "min": 0,
-          "max": 1000,
-          "paso": 0.1,
-          "unidad": "min"
         }
       ]
     }

@@ -98,9 +98,17 @@ def fila_pedidos(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
     f = v["fecha"]
     avisos = []
     pais_c, cod_c, ok_c = _pais(ref, v["ciudad_cliente"], v.get("pais_cliente"), avisos)
-    pais_r, cod_r, ok_r = _pais(ref, v["ciudad_restaurante"], v.get("pais_restaurante"), avisos)
-    misma_ciudad = clave_texto(v["ciudad_cliente"]) == clave_texto(v["ciudad_restaurante"])
+    misma_ubicacion = bool(v.get("misma_ubicacion", True))
+    if misma_ubicacion:
+        ciudad_r = v["ciudad_cliente"]
+        pais_r_indicado = v.get("pais_cliente")
+    else:
+        ciudad_r = v["ciudad_restaurante"]
+        pais_r_indicado = v.get("pais_restaurante")
+    pais_r, cod_r, ok_r = _pais(ref, ciudad_r, pais_r_indicado, avisos)
+    misma_ciudad = clave_texto(v["ciudad_cliente"]) == clave_texto(ciudad_r)
     dist, mult = v["distancia_km"], v["multiplicador_hora_pico"]
+    tiempo_promedio = v.get("hist_tiempo_promedio")
 
     antiguedad = (f - v["fecha_registro_cliente"]).days
     if antiguedad < 0:
@@ -112,11 +120,11 @@ def fila_pedidos(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
         # Cliente
         "ciudad_cliente": v["ciudad_cliente"], "pais_cliente": pais_c, "codigo_pais_cliente": cod_c,
         "segmento_cliente": v["segmento_cliente"],
-        "metodo_pago_preferido_cliente": v["metodo_pago_preferido_cliente"],
+        "metodo_pago_preferido_cliente": v.get("metodo_pago_preferido_cliente", v.get("metodo_pago")),
         "cliente_activo": _entero(v["cliente_activo"]),
         # Restaurante
         "cocina_restaurante": v["cocina_restaurante"],
-        "ciudad_restaurante": v["ciudad_restaurante"], "pais_restaurante": pais_r,
+        "ciudad_restaurante": ciudad_r, "pais_restaurante": pais_r,
         "codigo_pais_restaurante": cod_r,
         "costo_promedio_dos_personas": v["costo_promedio_dos_personas"],
         "nivel_rating_restaurante": v["nivel_rating_restaurante"],
@@ -139,9 +147,9 @@ def fila_pedidos(v: dict, ref: dict, medianas: dict) -> FilaConstruida:
         "cliente_mismo_pais": _mismo_pais(pais_c, ok_c, pais_r, ok_r, misma_ciudad),
         "antiguedad_cliente_dias": max(0, antiguedad),
         # Historial
-        "hist_tiempo_restaurante": _num(v.get("hist_tiempo_restaurante")),
+        "hist_tiempo_restaurante": _num(tiempo_promedio),
         "hist_n_pedidos_restaurante": _num(v.get("hist_n_pedidos_restaurante")),
-        "hist_tiempo_ciudad": _num(v.get("hist_tiempo_ciudad")),
+        "hist_tiempo_ciudad": _num(tiempo_promedio),
     }
     return FilaConstruida(_con_fechas(columnas, f), avisos)
 

@@ -124,11 +124,11 @@ def validar(esquema: dict, datos: dict, indice_categorias: dict) -> tuple[dict, 
         nombre = campo["nombre"]
         bruto = datos.get(nombre)
         if _vacio(bruto):
-            if campo["tipo"] == "booleano" and "defecto" in campo:
-                analizados[nombre] = (bool(campo["defecto"]), None)
+            if "defecto" in campo:
+                analizados[nombre] = (campo["defecto"], None)
             else:
                 analizados[nombre] = (None, None)
-            continue
+                continue
         try:
             analizados[nombre] = (_convertir(campo, bruto, indice_categorias), None)
         except ValueError as exc:

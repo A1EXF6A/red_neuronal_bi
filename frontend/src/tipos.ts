@@ -20,6 +20,7 @@ export interface CampoEsquema {
   max?: number;
   mostrar_si?: Condicion;
   valores_validos?: string[];
+  oculto?: boolean;
 }
 
 export interface SeccionEsquema {
